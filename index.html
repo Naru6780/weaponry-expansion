@@ -3,331 +3,509 @@
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta charset="utf-8">
-<title>Weaponry Expansion Gear</title>
+<title>Weaponry Expansion Wiki</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Literata:opsz,wght@7..72,400;7..72,500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap">
 <style>
-/* Layout: a gear manifest. Kits as sections; each item a catalogue plate (world model) with its inventory slot in the
-   corner and its in-game name on a slate bar; a click opens it in 3D beside its description.
-   One dark look by choice: the game's own slate panels and amber. */
+/* Layout: a wiki in the manner of The Long Dark's own: a dark page, slate title bars, green links. The Gear section is
+   a gallery of kits; each item has its own page (#/<item>): its in-game description and the article's sections on the
+   left, an infobox with its 3D model on the right, a navbox of all the gear at the foot. */
 :root {
-  --bg: #11151a;
-  --panel: #1a1f25;
-  --line: #2b323a;
-  --fg: #e8e4da;
-  --muted: #9ba3ab;
-  --accent: #e3a646;
-  --slot: #0c0f12;
-  --stage-hi: #3a434d;
-  --stage-lo: #171b20;
-  --display: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
-  --body: "Literata", Georgia, "Times New Roman", serif;
-  --mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --bg: #22252a;
+  --bar: #17191c;
+  --fg: #e6e6e6;
+  --muted: #a7adb6;
+  --slate: #676f7e;
+  --line: rgb(103 111 126 / .5);
+  --cell: #43464a;
+  --rule: #535559;
+  --link: #3fb489;
+  --stage-hi: #3b434c;
+  --stage-lo: #1a1d21;
+  --font: "Rubik", "Helvetica Neue", Helvetica, Arial, sans-serif;
   color-scheme: dark;
 }
 [hidden] { display: none !important; }
 html { background: var(--bg); }
-body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 16px; line-height: 1.55; }
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font); font-size: 15px; line-height: 1.7; }
 img { max-width: 100%; }
-.wrap { max-width: 1240px; margin: 0 auto; padding-block: 40px 72px;
-        padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
-        display: flex; flex-direction: column; gap: 52px; }
-.top { display: flex; flex-direction: column; gap: 12px; }
-.eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
-h1 { font-family: var(--display); font-weight: 700; font-size: clamp(40px, 7vw, 72px); line-height: .95; letter-spacing: .01em;
-     text-transform: uppercase; margin: 0; text-wrap: balance; }
-section { display: flex; flex-direction: column; gap: 22px; }
-.kit { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; border-bottom: 1px solid var(--line); padding-bottom: 12px; }
-.kit h2 { font-family: var(--display); font-weight: 700; font-size: clamp(28px, 4vw, 38px); letter-spacing: .02em; text-transform: uppercase;
-          margin: 0; text-wrap: balance; }
-.kit .count { font-family: var(--mono); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--accent); }
-.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: 20px; }
-.item { appearance: none; font: inherit; color: inherit; text-align: left; cursor: pointer; padding: 0; background: var(--panel);
-        border: 1px solid var(--line); border-radius: 4px; overflow: hidden; min-width: 0; display: flex; flex-direction: column;
-        transition: border-color .15s, transform .15s; }
-.item:hover { border-color: var(--accent); }
-.item:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-@media (prefers-reduced-motion: no-preference) { .item:hover { transform: translateY(-2px); } }
-.plate { position: relative; display: block; }
-.plate > img { display: block; width: 100%; height: auto; aspect-ratio: 4 / 3; }
-.slot { position: absolute; right: 10px; bottom: 10px; width: 88px; height: 88px; background: var(--slot); border: 1px solid var(--line);
-        border-radius: 3px; display: grid; place-items: center; box-shadow: 0 2px 10px rgb(0 0 0 / .35); }
-.slot img { width: 80px; height: 80px; }
-.label { display: block; font-family: var(--display); font-weight: 600; font-size: 22px; line-height: 1.15; letter-spacing: .04em;
-         text-transform: uppercase; color: var(--accent); padding: 11px 14px 13px; border-top: 1px solid var(--line); text-wrap: balance; }
-/* the viewer */
-dialog { padding: 0; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); color: var(--fg);
-         width: min(1180px, calc(100vw - 32px)); height: min(760px, calc(100dvh - 32px)); max-width: none; max-height: none; overflow: hidden; }
-dialog::backdrop { background: rgb(6 8 10 / .78); }
-.v { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); height: 100%; }
-.stage { position: relative; min-height: 0; background: radial-gradient(ellipse at 50% 42%, var(--stage-hi), var(--stage-lo) 72%); }
-.stage canvas { display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; }
-.stage canvas:active { cursor: grabbing; }
-.status { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--mono); font-size: 13px; color: var(--muted);
-          pointer-events: none; text-align: center; padding: 16px; }
-.hint { position: absolute; left: 14px; bottom: 12px; font-family: var(--mono); font-size: 11.5px; color: var(--muted); pointer-events: none; }
-.info { border-left: 1px solid var(--line); padding: 26px 24px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
-.info .slot-lg { width: 112px; height: 112px; background: var(--slot); border: 1px solid var(--line); border-radius: 3px; display: grid; place-items: center; }
-.info .slot-lg img { width: 102px; height: 102px; }
-.info h2 { font-family: var(--display); font-weight: 700; font-size: 34px; line-height: 1.05; letter-spacing: .02em; text-transform: uppercase;
-           color: var(--accent); margin: 0; text-wrap: balance; }
-.info p { margin: 0; max-width: 60ch; }
-.close { position: absolute; top: 10px; right: 10px; width: 40px; height: 40px; border-radius: 4px; border: 1px solid var(--line);
-         background: rgb(17 21 26 / .85); color: var(--fg); font: 600 22px/1 var(--display); cursor: pointer; }
-.close:hover, .close:focus-visible { border-color: var(--accent); color: var(--accent); outline: none; }
-@media (max-width: 760px) {
-  dialog { height: calc(100dvh - 24px); width: calc(100vw - 24px); }
-  .v { grid-template-columns: minmax(0, 1fr); grid-template-rows: 56% 44%; }
-  .info { border-left: none; border-top: 1px solid var(--line); padding: 18px 16px; }
-  .info .slot-lg { width: 72px; height: 72px; } .info .slot-lg img { width: 64px; height: 64px; }
-  .info h2 { font-size: 26px; }
+a { color: var(--link); text-decoration: none; }
+a:hover { text-decoration: underline; }
+a:focus-visible, button:focus-visible, summary:focus-visible { outline: 2px solid var(--link); outline-offset: 2px; }
+h1[tabindex="-1"]:focus { outline: none; }
+.site { background: var(--bar); border-bottom: 1px solid var(--line); }
+.site-in, .page { max-width: 1240px; margin: 0 auto;
+                  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.site-in { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 28px; padding-block: 14px; }
+.brand { font-weight: 700; font-size: 22px; letter-spacing: .04em; text-transform: uppercase; color: var(--fg); }
+.brand:hover { text-decoration: none; color: #fff; }
+.tabs { display: flex; gap: 22px; }
+.tabs a { color: var(--muted); font-weight: 500; font-size: 14px; letter-spacing: .08em; text-transform: uppercase; padding: 4px 0;
+          border-bottom: 2px solid transparent; }
+.tabs a:hover { color: var(--fg); text-decoration: none; }
+.tabs a[aria-current="page"] { color: var(--fg); border-bottom-color: var(--link); }
+.page { padding-block: 28px 64px; }
+.crumb { font-size: 13px; color: var(--muted); margin: 0 0 4px; }
+h1 { font-weight: 300; font-size: clamp(30px, 4.6vw, 40px); line-height: 1.2; letter-spacing: .01em; margin: 0 0 18px; text-wrap: balance; }
+.lead { margin: 0 0 30px; max-width: 70ch; }
+h2.sec, .kit h2 { font-weight: 500; font-size: 24px; line-height: 1.3; margin: 34px 0 14px; padding-bottom: 6px; border-bottom: 1px solid var(--rule); }
+.kit:first-of-type h2 { margin-top: 0; }
+/* the gallery */
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr)); gap: 16px; }
+.tile { display: flex; flex-direction: column; border: 1px solid var(--line); background: var(--bg); color: var(--fg); min-width: 0;
+        transition: border-color .15s; }
+.tile:hover { text-decoration: none; border-color: var(--link); }
+.t-name { background: var(--slate); color: #fff; font-weight: 700; font-size: 14px; line-height: 1.3; text-align: center; padding: 8px 10px;
+          min-height: 2.6em; display: grid; place-items: center; text-wrap: balance; }
+.t-img { position: relative; display: block; }
+.t-img > img { display: block; width: 100%; height: auto; aspect-ratio: 4 / 3; }
+.slot { position: absolute; right: 8px; bottom: 8px; width: 64px; height: 64px; background: rgb(14 16 19 / .92); border: 1px solid var(--line);
+        display: grid; place-items: center; }
+.slot img { width: 58px; height: 58px; }
+/* an item's page */
+.article { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 18px 32px; align-items: start; }
+.article .infobox { grid-column: 2; grid-row: 1 / span 2; }
+.body { min-width: 0; }
+.quote { margin: 0 0 8px; display: grid; grid-template-columns: 34px minmax(0, 1fr) 34px; align-items: start; max-width: 70ch; }
+.quote::before, .quote::after { font-size: 44px; line-height: 1; color: var(--slate); font-family: Georgia, serif; }
+.quote::before { content: "\201C"; grid-column: 1; grid-row: 1; }
+.quote::after { content: "\201D"; grid-column: 3; grid-row: 1; align-self: end; text-align: right; }
+.quote blockquote { grid-column: 2; grid-row: 1; margin: 0; font-style: italic; font-size: 16px; }
+.quote figcaption { grid-column: 2; grid-row: 2; font-size: 12px; color: var(--muted); text-align: right; margin-top: 4px; }
+.body p { max-width: 70ch; }
+.note { color: var(--muted); font-size: 14px; }
+/* infobox */
+.infobox { border: 1px solid var(--line); background: var(--bg); font-size: 13px; line-height: 1.45; }
+.ib-title { background: var(--slate); color: #fff; font-weight: 700; font-size: 18px; text-align: center; padding: 8px 12px; margin: 0; text-wrap: balance; }
+.ib-media { position: relative; aspect-ratio: 1; background: radial-gradient(ellipse at 50% 42%, var(--stage-hi), var(--stage-lo) 72%); }
+.ib-media canvas, .big canvas { display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; }
+.ib-media canvas:active, .big canvas:active { cursor: grabbing; }
+.status { position: absolute; inset: 0; display: grid; place-items: center; font-size: 13px; color: var(--muted); pointer-events: none;
+          text-align: center; padding: 16px; }
+.hint { position: absolute; left: 10px; bottom: 8px; font-size: 11.5px; color: var(--muted); pointer-events: none; }
+.expand { position: absolute; right: 8px; bottom: 8px; width: 34px; height: 34px; border: 1px solid var(--line); border-radius: 3px;
+          background: rgb(23 25 28 / .85); color: var(--fg); cursor: pointer; display: grid; place-items: center; padding: 0; }
+.expand:hover { border-color: var(--link); color: var(--link); }
+.ib-head { background: var(--slate); color: #fff; font-weight: 700; font-size: 14px; text-align: center; padding: 6px 10px; margin: 0; }
+.ib-row { display: grid; grid-template-columns: 104px minmax(0, 1fr); gap: 10px; padding: 8px 12px; border-top: 1px solid var(--line); }
+.ib-head + .ib-row { border-top: none; }
+.ib-row > b { font-size: 12px; }
+.ib-list { margin: 0; padding: 0; list-style: none; }
+.infobox details summary { list-style: none; cursor: pointer; background: var(--slate); color: #fff; font-weight: 700; font-size: 14px;
+                           text-align: center; padding: 6px 10px; position: relative; }
+.infobox details summary::-webkit-details-marker { display: none; }
+.infobox details summary::after { content: "\25BE"; position: absolute; right: 12px; }
+.infobox details[open] summary::after { content: "\25B4"; }
+code { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: 12px; overflow-wrap: anywhere; }
+/* recipe boxes, as the wiki's */
+.recipes { display: flex; flex-wrap: wrap; gap: 16px; align-items: start; }
+.recipe { border: 1px solid var(--line); width: min(100%, 330px); font-size: 13px; line-height: 1.45; }
+.rc-title { background: var(--slate); color: #fff; font-weight: 700; font-size: 14px; display: flex; align-items: center; justify-content: center;
+            gap: 8px; padding: 6px 10px; text-align: center; }
+.rc-title img { width: 28px; height: 28px; flex: none; }
+.rc-top { display: grid; grid-template-columns: 1fr 2fr; }
+.rc-top > div { padding: 8px 10px; text-align: center; border-top: 1px solid var(--line); }
+.rc-top > div + div { border-left: 1px solid var(--line); }
+.rc-top small { display: block; color: var(--muted); font-size: 11px; }
+.recipe .ib-head { font-size: 13px; padding: 4px 10px; }
+.mats { width: 100%; border-collapse: collapse; }
+.mats th { background: var(--cell); font-size: 12px; text-align: left; padding: 4px 10px; border: 1px solid var(--rule); border-width: 1px 0; }
+.mats th:last-child, .mats td:last-child { text-align: center; width: 4.5em; }
+.mats td { padding: 5px 10px; border-top: 1px solid var(--rule); vertical-align: middle; }
+.mats .it { display: flex; align-items: center; gap: 8px; }
+.mats .it img { width: 26px; height: 26px; flex: none; }
+.rc-learn { padding: 7px 10px; border-top: 1px solid var(--line); color: var(--muted); font-size: 12px; }
+.harvest { width: min(100%, 420px); border: 1px solid var(--line); }
+/* the navbox */
+.navbox { margin-top: 48px; border: 1px solid var(--line); font-size: 13px; line-height: 1.5; }
+.nb-title { background: var(--slate); color: #fff; font-weight: 700; text-align: center; padding: 6px 10px; }
+.nb-row { display: grid; grid-template-columns: 190px minmax(0, 1fr); border-top: 1px solid var(--bg); }
+.nb-group { background: var(--cell); font-weight: 700; padding: 6px 10px; text-align: right; }
+.nb-list { padding: 6px 10px; }
+.nb-list a + a::before { content: "\2022"; color: var(--muted); margin: 0 .55em; display: inline-block; }
+.nb-list a[aria-current="page"] { color: var(--fg); font-weight: 700; }
+/* the big viewer */
+dialog { padding: 0; border: 1px solid var(--line); background: var(--bg); color: var(--fg);
+         width: min(1180px, calc(100vw - 32px)); height: min(820px, calc(100dvh - 32px)); max-width: none; max-height: none; overflow: hidden; }
+dialog::backdrop { background: rgb(6 8 10 / .8); }
+.big { position: relative; height: 100%; background: radial-gradient(ellipse at 50% 42%, var(--stage-hi), var(--stage-lo) 72%); }
+.close { position: absolute; top: 10px; right: 10px; width: 40px; height: 40px; border-radius: 3px; border: 1px solid var(--line);
+         background: rgb(23 25 28 / .85); color: var(--fg); font: 700 22px/1 var(--font); cursor: pointer; }
+.close:hover { border-color: var(--link); color: var(--link); }
+@media (max-width: 900px) {
+  .article { grid-template-columns: minmax(0, 1fr); }
+  .article .infobox { grid-column: 1; grid-row: auto; width: min(100%, 420px); justify-self: center; }
+  .nb-row { grid-template-columns: minmax(0, 1fr); }
+  .nb-group { text-align: left; }
 }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="top">
-    <div class="eyebrow">The Long Dark &middot; Weaponry Expansion &middot; 40 items</div>
-    <h1>Weaponry Expansion Gear</h1>
+<header class="site">
+  <div class="site-in">
+    <a class="brand" href="#gear">Weaponry Expansion Wiki</a>
+    <nav class="tabs" aria-label="Wiki"><a href="#gear" aria-current="page">Gear</a></nav>
   </div>
-<section id="medieval">
-  <header class="kit"><h2>Medieval crossbow</h2><span class="count">13 items</span></header>
+</header>
+<div class="page">
+  <main id="index">
+    <h1 id="index-title" tabindex="-1">Gear</h1>
+    <p class="lead">Every item the mod adds. Open one to turn it in 3D and to see how it is made and what it breaks down into.</p>
+<section class="kit" id="medieval">
+  <h2>Medieval crossbow</h2>
   <div class="grid">
-<button class="item" type="button" data-k="Crossbow" aria-label="Medieval Crossbow: open in 3D">
-  <span class="plate"><img src="w/Crossbow.jpg" width="960" height="720" alt="">
+<a class="tile" href="#/Crossbow">
+  <span class="t-name">15th-Century Steel Crossbow</span>
+  <span class="t-img"><img src="w/Crossbow.jpg" width="960" height="720" alt="" loading="lazy">
     <span class="slot"><img src="i/Crossbow.png" width="256" height="256" alt=""></span></span>
-  <span class="label">Medieval Crossbow</span>
-</button>
-<button class="item" type="button" data-k="MedievalTiller" aria-label="Crossbow Stock: open in 3D">
-  <span class="plate"><img src="w/MedievalTiller.jpg" width="960" height="720" alt="">
+</a>
+<a class="tile" href="#/MedievalTiller">
+  <span class="t-name">Crossbow Stock</span>
+  <span class="t-img"><img src="w/MedievalTiller.jpg" width="960" height="720" alt="" loading="lazy">
     <span class="slot"><img src="i/MedievalTiller.png" width="256" height="256" alt=""></span></span>
-  <span class="label">Crossbow Stock</span>
-</button>
-<button class="item" type="button" data-k="MedievalLock" aria-label="Crossbow Lock: open in 3D">
-  <span class="plate"><img src="w/MedievalLock.jpg" width="960" height="720" alt="">
+</a>
+<a class="tile" href="#/MedievalLock">
+  <span class="t-name">Crossbow Nut and Lock</span>
+  <span class="t-img"><img src="w/MedievalLock.jpg" width="960" height="720" alt="" loading="lazy">
     <span class="slot"><img src="i/MedievalLock.png" width="256" height="256" alt=""></span></span>
-  <span class="label">Crossbow Lock</span>
-</button>
-<button class="item" type="button" data-k="MedievalBow" aria-label="Steel Crossbow Bow: open in 3D">
-  <span class="plate"><img src="w/MedievalBow.jpg" width="960" height="720" alt="">
+</a>
+<a class="tile" href="#/MedievalBow">
+  <span class="t-name">Steel Crossbow Bow</span>
+  <span class="t-img"><img src="w/MedievalBow.jpg" width="960" height="720" alt="" loading="lazy">
     <span class="slot"><img src="i/MedievalBow.png" width="256" height="256" alt=""></span></span>
-  <span class="label">Steel Crossbow Bow</span>
-</button>
-<button class="item" type="button" data-k="MedievalStirrup" aria-label="Stirrup and Bow-irons: open in 3D">
-  <span class="plate"><img src="w/MedievalStirrup.jpg" width="960" height="720" alt="">
+</a>
+<a class="tile" href="#/MedievalStirrup">
+  <span class="t-name">Stirrup and Bow-Irons</span>
+  <span class="t-img"><img src="w/MedievalStirrup.jpg" width="960" height="720" alt="" loading="lazy">
     <span class="slot"><img src="i/MedievalStirrup.png" width="256" height="256" alt=""></span></span>
-  <span class="label">Stirrup and Bow-irons</span>
-</button>
-<button class="item" type="button" data-k="MedievalString" aria-label="Crossbow String: open in 3D">
-  <span class="plate"><img src="w/MedievalString.jpg" width="960" height="720" alt="">
+</a>
+<a class="tile" href="#/MedievalString">
+  <span class="t-name">Crossbow String</span>
+  <span class="t-img"><img src="w/MedievalString.jpg" width="960" height="720" alt="" loading="lazy">
     <span class="slot"><img src="i/MedievalString.png" width="256" height="256" alt=""></span></span>
-  <span class="label">Crossbow String</span>
-</button>
-<button class="item" type="button" data-k="MedievalLever" aria-label="Goat&#x27;s-foot Lever: open in 3D">
-  <span class="plate"><img src="w/MedievalLever.jpg" width="960" height="720" alt="">
+</a>
+<a class="tile" href="#/MedievalLever">
+  <span class="t-name">Goat&#x27;s-Foot Lever</span>
+  <span class="t-img"><img src="w/MedievalLever.jpg" width="960" height="720" alt="" loading="lazy">
     <span class="slot"><img src="i/MedievalLever.png" width="256" height="256" alt=""></span></span>
-  <span class="label">Goat&#x27;s-foot Lever</span>
-</button>
-<button class="item" type="button" data-k="MedievalPlan1" aria-label="Manuscript Plan I: The Stock: open in 3D">
-  <span class="plate"><img src="w/MedievalPlan1.jpg" width="960" height="720" alt="">
+</a>
+<a class="tile" href="#/MedievalPlan1">
+  <span class="t-name">Manuscript Plan I: The Stock</span>
+  <span class="t-img"><img src="w/MedievalPlan1.jpg" width="960" height="720" alt="" loading="lazy">
     <span class="slot"><img src="i/MedievalPlan1.png" width="256" height="256" alt=""></span></span>
-  <span class="label">Manuscript Plan I: The Stock</span>
-</button>
-<button class="item" type="button" data-k="MedievalPlan2" aria-label="Manuscript Plan II: The Nut and the Lock: open in 3D">
-  <span class="plate"><img src="w/MedievalPlan2.jpg" width="960" height="720" alt="">
+</a>
+<a class="tile" href="#/MedievalPlan2">
+  <span class="t-name">Manuscript Plan II: The Nut and the Lock</span>
+  <span class="t-img"><img src="w/MedievalPlan2.jpg" width="960" height="720" alt="" loading="lazy">
     <span class="slot"><img src="i/MedievalPlan2.png" width="256" height="256" alt=""></span></span>
-  <span class="label">Manuscript Plan II: The Nut and the Lock</span>
-</button>
-<button class="item" type="button" data-k="MedievalPlan3" aria-label="Manuscript Plan III: The Steel Bow: open in 3D">
-  <span class="plate"><img src="w/MedievalPlan3.jpg" width="960" height="720" alt="">
+</a>
+<a class="tile" href="#/MedievalPlan3">
+  <span class="t-name">Manuscript Plan III: The Steel Bow</span>
+  <span class="t-img"><img src="w/MedievalPlan3.jpg" width="960" height="720" alt="" loading="lazy">
     <span class="slot"><img src="i/MedievalPlan3.png" width="256" height="256" alt=""></span></span>
-  <span class="label">Manuscript Plan III: The Steel Bow</span>
-</button>
-<button class="item" type="button" data-k="MedievalPlan4" aria-label="Manuscript Plan IV: The Stirrup and Bow-irons: open in 3D">
-  <span class="plate"><img src="w/MedievalPlan4.jpg" width="960" height="720" alt="">
+</a>
+<a class="tile" href="#/MedievalPlan4">
+  <span class="t-name">Manuscript Plan IV: The Stirrup and Bow-Irons</span>
+  <span class="t-img"><img src="w/MedievalPlan4.jpg" width="960" height="720" alt="" loading="lazy">
     <span class="slot"><img src="i/MedievalPlan4.png" width="256" height="256" alt=""></span></span>
-  <span class="label">Manuscript Plan IV: The Stirrup and Bow-irons</span>
-</button>
-<button class="item" type="button" data-k="MedievalPlan5" aria-label="Manuscript Plan V: The String: open in 3D">
-  <span class="plate"><img src="w/MedievalPlan5.jpg" width="960" height="720" alt="">
+</a>
+<a class="tile" href="#/MedievalPlan5">
+  <span class="t-name">Manuscript Plan V: The String</span>
+  <span class="t-img"><img src="w/MedievalPlan5.jpg" width="960" height="720" alt="" loading="lazy">
     <span class="slot"><img src="i/MedievalPlan5.png" width="256" height="256" alt=""></span></span>
-  <span class="label">Manuscript Plan V: The String</span>
-</button>
-<button class="item" type="button" data-k="MedievalPlan6" aria-label="Manuscript Plan VI: The Goat&#x27;s-foot Lever: open in 3D">
-  <span class="plate"><img src="w/MedievalPlan6.jpg" width="960" height="720" alt="">
+</a>
+<a class="tile" href="#/MedievalPlan6">
+  <span class="t-name">Manuscript Plan VI: The Goat&#x27;s-Foot Lever</span>
+  <span class="t-img"><img src="w/MedievalPlan6.jpg" width="960" height="720" alt="" loading="lazy">
     <span class="slot"><img src="i/MedievalPlan6.png" width="256" height="256" alt=""></span></span>
-  <span class="label">Manuscript Plan VI: The Goat&#x27;s-foot Lever</span>
-</button>
+</a>
   </div>
 </section>
-<section id="handmade">
-  <header class="kit"><h2>Handmade bolts, quiver and book</h2><span class="count">7 items</span></header>
+<section class="kit" id="handmade">
+  <h2>Handmade bolts, quiver and book</h2>
   <div class="grid">
-<button class="item" type="button" data-k="CrossbowBoltCrafted" aria-label="Standard Hunting Bolt: open in 3D">
-  <span class="plate"><img src="w/CrossbowBoltCrafted.jpg" width="960" height="720" alt="">
+<a class="tile" href="#/CrossbowBoltCrafted">
+  <span class="t-name">Standard Hunting Bolt</span>
+  <span class="t-img"><img src="w/CrossbowBoltCrafted.jpg" width="960" height="720" alt="" loading="lazy">
     <span class="slot"><img src="i/CrossbowBoltCrafted.png" width="256" height="256" alt=""></span></span>
-  <span class="label">Standard Hunting Bolt</span>
-</button>
-<button class="item" type="button" data-k="CrossbowBoltHeavy" aria-label="Heavy Hunting Bolt: open in 3D">
-  <span class="plate"><img src="w/CrossbowBoltHeavy.jpg" width="960" height="720" alt="">
+</a>
+<a class="tile" href="#/CrossbowBoltHeavy">
+  <span class="t-name">Heavy Hunting Bolt</span>
+  <span class="t-img"><img src="w/CrossbowBoltHeavy.jpg" width="960" height="720" alt="" loading="lazy">
     <span class="slot"><img src="i/CrossbowBoltHeavy.png" width="256" height="256" alt=""></span></span>
-  <span class="label">Heavy Hunting Bolt</span>
-</button>
-<button class="item" type="button" data-k="CrossbowBoltBarbed" aria-label="Barbed Bolt: open in 3D">
-  <span class="plate"><img src="w/CrossbowBoltBarbed.jpg" width="960" height="720" alt="">
+</a>
+<a class="tile" href="#/CrossbowBoltBarbed">
+  <span class="t-name">Barbed Bolt</span>
+  <span class="t-img"><img src="w/CrossbowBoltBarbed.jpg" width="960" height="720" alt="" loading="lazy">
     <span class="slot"><img src="i/CrossbowBoltBarbed.png" width="256" height="256" alt=""></span></span>
-  <span class="label">Barbed Bolt</span>
-</button>
-<button class="item" type="button" data-k="CrossbowBoltCraftedBroken" aria-label="Broken Handmade Bolt: open in 3D">
-  <span class="plate"><img src="w/CrossbowBoltCraftedBroken.jpg" width="960" height="720" alt="">
+</a>
+<a class="tile" href="#/CrossbowBoltCraftedBroken">
+  <span class="t-name">Broken Handmade Bolt</span>
+  <span class="t-img"><img src="w/CrossbowBoltCraftedBroken.jpg" width="960" height="720" alt="" loading="lazy">
     <span class="slot"><img src="i/CrossbowBoltCraftedBroken.png" width="256" height="256" alt=""></span></span>
-  <span class="label">Broken Handmade Bolt</span>
-</button>
-<button class="item" type="button" data-k="CrossbowBoltCraftedShattered" aria-label="Splintered Handmade Bolt: open in 3D">
-  <span class="plate"><img src="w/CrossbowBoltCraftedShattered.jpg" width="960" height="720" alt="">
+</a>
+<a class="tile" href="#/CrossbowBoltCraftedShattered">
+  <span class="t-name">Splintered Handmade Bolt</span>
+  <span class="t-img"><img src="w/CrossbowBoltCraftedShattered.jpg" width="960" height="720" alt="" loading="lazy">
     <span class="slot"><img src="i/CrossbowBoltCraftedShattered.png" width="256" height="256" alt=""></span></span>
-  <span class="label">Splintered Handmade Bolt</span>
-</button>
-<button class="item" type="button" data-k="CrossbowQuiver" aria-label="Leather Bolt Quiver: open in 3D">
-  <span class="plate"><img src="w/CrossbowQuiver.jpg" width="960" height="720" alt="">
+</a>
+<a class="tile" href="#/CrossbowQuiver">
+  <span class="t-name">Canada Point Leather Bolt Quiver</span>
+  <span class="t-img"><img src="w/CrossbowQuiver.jpg" width="960" height="720" alt="" loading="lazy">
     <span class="slot"><img src="i/CrossbowQuiver.png" width="256" height="256" alt=""></span></span>
-  <span class="label">Leather Bolt Quiver</span>
-</button>
-<button class="item" type="button" data-k="CrossbowBook" aria-label="The Crossbow: open in 3D">
-  <span class="plate"><img src="w/CrossbowBook.jpg" width="960" height="720" alt="">
+</a>
+<a class="tile" href="#/CrossbowBook">
+  <span class="t-name">The Crossbow: Mediaeval and Modern, Military and Sporting</span>
+  <span class="t-img"><img src="w/CrossbowBook.jpg" width="960" height="720" alt="" loading="lazy">
     <span class="slot"><img src="i/CrossbowBook.png" width="256" height="256" alt=""></span></span>
-  <span class="label">The Crossbow</span>
-</button>
+</a>
   </div>
 </section>
-<section id="twinstrike">
-  <header class="kit"><h2>Excalibur TwinStrike</h2><span class="count">5 items</span></header>
+<section class="kit" id="twinstrike">
+  <h2>Excalibur TwinStrike TAC2</h2>
   <div class="grid">
-<button class="item" type="button" data-k="TwinStrike" aria-label="TwinStrike Crossbow: open in 3D">
-  <span class="plate"><img src="w/TwinStrike.jpg" width="960" height="720" alt="">
+<a class="tile" href="#/TwinStrike">
+  <span class="t-name">Excalibur TwinStrike TAC2</span>
+  <span class="t-img"><img src="w/TwinStrike.jpg" width="960" height="720" alt="" loading="lazy">
     <span class="slot"><img src="i/TwinStrike.png" width="256" height="256" alt=""></span></span>
-  <span class="label">TwinStrike Crossbow</span>
-</button>
-<button class="item" type="button" data-k="TwinStrikeScope" aria-label="Tact-100 Scope: open in 3D">
-  <span class="plate"><img src="w/TwinStrikeScope.jpg" width="960" height="720" alt="">
+</a>
+<a class="tile" href="#/TwinStrikeScope">
+  <span class="t-name">Excalibur Tact-100 Illuminated Crossbow Scope</span>
+  <span class="t-img"><img src="w/TwinStrikeScope.jpg" width="960" height="720" alt="" loading="lazy">
     <span class="slot"><img src="i/TwinStrikeScope.png" width="256" height="256" alt=""></span></span>
-  <span class="label">Tact-100 Scope</span>
-</button>
-<button class="item" type="button" data-k="ChargerEXT" aria-label="Charger EXT: open in 3D">
-  <span class="plate"><img src="w/ChargerEXT.jpg" width="960" height="720" alt="">
+</a>
+<a class="tile" href="#/ChargerEXT">
+  <span class="t-name">Excalibur Charger EXT Crank Cocking Aid</span>
+  <span class="t-img"><img src="w/ChargerEXT.jpg" width="960" height="720" alt="" loading="lazy">
     <span class="slot"><img src="i/ChargerEXT.png" width="256" height="256" alt=""></span></span>
-  <span class="label">Charger EXT</span>
-</button>
-<button class="item" type="button" data-k="ExcaliburQuiver" aria-label="Excalibur Quiver: open in 3D">
-  <span class="plate"><img src="w/ExcaliburQuiver.jpg" width="960" height="720" alt="">
+</a>
+<a class="tile" href="#/ExcaliburQuiver">
+  <span class="t-name">Excalibur Rebolt Quiver</span>
+  <span class="t-img"><img src="w/ExcaliburQuiver.jpg" width="960" height="720" alt="" loading="lazy">
     <span class="slot"><img src="i/ExcaliburQuiver.png" width="256" height="256" alt=""></span></span>
-  <span class="label">Excalibur Quiver</span>
-</button>
-<button class="item" type="button" data-k="CrossbowMaintenanceKit" aria-label="Crossbow Maintenance Kit: open in 3D">
-  <span class="plate"><img src="w/CrossbowMaintenanceKit.jpg" width="960" height="720" alt="">
+</a>
+<a class="tile" href="#/CrossbowMaintenanceKit">
+  <span class="t-name">Excalibur Crossbow Maintenance Utility Pack</span>
+  <span class="t-img"><img src="w/CrossbowMaintenanceKit.jpg" width="960" height="720" alt="" loading="lazy">
     <span class="slot"><img src="i/CrossbowMaintenanceKit.png" width="256" height="256" alt=""></span></span>
-  <span class="label">Crossbow Maintenance Kit</span>
-</button>
+</a>
   </div>
 </section>
-<section id="quill">
-  <header class="kit"><h2>Quill bolts</h2><span class="count">15 items</span></header>
+<section class="kit" id="quill">
+  <h2>Quill bolts</h2>
   <div class="grid">
-<button class="item" type="button" data-k="CrossbowBoltCarbon" aria-label="Standard Broadhead Quill Bolt: open in 3D">
-  <span class="plate"><img src="w/CrossbowBoltCarbon.jpg" width="960" height="720" alt="">
+<a class="tile" href="#/CrossbowBoltCarbon">
+  <span class="t-name">Excalibur Quill Bolt (Boltcutter 100)</span>
+  <span class="t-img"><img src="w/CrossbowBoltCarbon.jpg" width="960" height="720" alt="" loading="lazy">
     <span class="slot"><img src="i/CrossbowBoltCarbon.png" width="256" height="256" alt=""></span></span>
-  <span class="label">Standard Broadhead Quill Bolt</span>
-</button>
-<button class="item" type="button" data-k="QuillBoltHeavy" aria-label="Heavy Broadhead Quill Bolt: open in 3D">
-  <span class="plate"><img src="w/QuillBoltHeavy.jpg" width="960" height="720" alt="">
+</a>
+<a class="tile" href="#/QuillBoltHeavy">
+  <span class="t-name">Excalibur Quill Bolt (Boltcutter 150)</span>
+  <span class="t-img"><img src="w/QuillBoltHeavy.jpg" width="960" height="720" alt="" loading="lazy">
     <span class="slot"><img src="i/QuillBoltHeavy.png" width="256" height="256" alt=""></span></span>
-  <span class="label">Heavy Broadhead Quill Bolt</span>
-</button>
-<button class="item" type="button" data-k="QuillBoltMechanical" aria-label="Mechanical Broadhead Quill Bolt: open in 3D">
-  <span class="plate"><img src="w/QuillBoltMechanical.jpg" width="960" height="720" alt="">
+</a>
+<a class="tile" href="#/QuillBoltMechanical">
+  <span class="t-name">Excalibur Quill Bolt (Trailblazer 100)</span>
+  <span class="t-img"><img src="w/QuillBoltMechanical.jpg" width="960" height="720" alt="" loading="lazy">
     <span class="slot"><img src="i/QuillBoltMechanical.png" width="256" height="256" alt=""></span></span>
-  <span class="label">Mechanical Broadhead Quill Bolt</span>
-</button>
-<button class="item" type="button" data-k="QuillBoltSmallGame" aria-label="Small-Game Quill Bolt: open in 3D">
-  <span class="plate"><img src="w/QuillBoltSmallGame.jpg" width="960" height="720" alt="">
+</a>
+<a class="tile" href="#/QuillBoltSmallGame">
+  <span class="t-name">Excalibur Quill Bolt (Zwickey Judo)</span>
+  <span class="t-img"><img src="w/QuillBoltSmallGame.jpg" width="960" height="720" alt="" loading="lazy">
     <span class="slot"><img src="i/QuillBoltSmallGame.png" width="256" height="256" alt=""></span></span>
-  <span class="label">Small-Game Quill Bolt</span>
-</button>
-<button class="item" type="button" data-k="QuillShaft" aria-label="Quill Shaft: open in 3D">
-  <span class="plate"><img src="w/QuillShaft.jpg" width="960" height="720" alt="">
+</a>
+<a class="tile" href="#/QuillShaft">
+  <span class="t-name">Excalibur Quill Shaft</span>
+  <span class="t-img"><img src="w/QuillShaft.jpg" width="960" height="720" alt="" loading="lazy">
     <span class="slot"><img src="i/QuillShaft.png" width="256" height="256" alt=""></span></span>
-  <span class="label">Quill Shaft</span>
-</button>
-<button class="item" type="button" data-k="CrossbowBoltBroken" aria-label="Broken Quill Bolt: open in 3D">
-  <span class="plate"><img src="w/CrossbowBoltBroken.jpg" width="960" height="720" alt="">
+</a>
+<a class="tile" href="#/CrossbowBoltBroken">
+  <span class="t-name">Broken Quill Bolt</span>
+  <span class="t-img"><img src="w/CrossbowBoltBroken.jpg" width="960" height="720" alt="" loading="lazy">
     <span class="slot"><img src="i/CrossbowBoltBroken.png" width="256" height="256" alt=""></span></span>
-  <span class="label">Broken Quill Bolt</span>
-</button>
-<button class="item" type="button" data-k="QuillPointStandard" aria-label="Boltcutter 100 Broadhead: open in 3D">
-  <span class="plate"><img src="w/QuillPointStandard.jpg" width="960" height="720" alt="">
+</a>
+<a class="tile" href="#/QuillPointStandard">
+  <span class="t-name">Excalibur Boltcutter 100 Broadhead</span>
+  <span class="t-img"><img src="w/QuillPointStandard.jpg" width="960" height="720" alt="" loading="lazy">
     <span class="slot"><img src="i/QuillPointStandard.png" width="256" height="256" alt=""></span></span>
-  <span class="label">Boltcutter 100 Broadhead</span>
-</button>
-<button class="item" type="button" data-k="QuillPointHeavy" aria-label="Boltcutter 150 Broadhead: open in 3D">
-  <span class="plate"><img src="w/QuillPointHeavy.jpg" width="960" height="720" alt="">
+</a>
+<a class="tile" href="#/QuillPointHeavy">
+  <span class="t-name">Excalibur Boltcutter 150 Broadhead</span>
+  <span class="t-img"><img src="w/QuillPointHeavy.jpg" width="960" height="720" alt="" loading="lazy">
     <span class="slot"><img src="i/QuillPointHeavy.png" width="256" height="256" alt=""></span></span>
-  <span class="label">Boltcutter 150 Broadhead</span>
-</button>
-<button class="item" type="button" data-k="QuillPointMechanical" aria-label="Trailblazer Mechanical Broadhead: open in 3D">
-  <span class="plate"><img src="w/QuillPointMechanical.jpg" width="960" height="720" alt="">
+</a>
+<a class="tile" href="#/QuillPointMechanical">
+  <span class="t-name">Excalibur Trailblazer 100 Broadhead</span>
+  <span class="t-img"><img src="w/QuillPointMechanical.jpg" width="960" height="720" alt="" loading="lazy">
     <span class="slot"><img src="i/QuillPointMechanical.png" width="256" height="256" alt=""></span></span>
-  <span class="label">Trailblazer Mechanical Broadhead</span>
-</button>
-<button class="item" type="button" data-k="QuillPointSmallGame" aria-label="Judo Small-Game Point: open in 3D">
-  <span class="plate"><img src="w/QuillPointSmallGame.jpg" width="960" height="720" alt="">
+</a>
+<a class="tile" href="#/QuillPointSmallGame">
+  <span class="t-name">Zwickey Judo Point</span>
+  <span class="t-img"><img src="w/QuillPointSmallGame.jpg" width="960" height="720" alt="" loading="lazy">
     <span class="slot"><img src="i/QuillPointSmallGame.png" width="256" height="256" alt=""></span></span>
-  <span class="label">Judo Small-Game Point</span>
-</button>
-<button class="item" type="button" data-k="CrossbowBoltBox" aria-label="Box of Quill Shafts: open in 3D">
-  <span class="plate"><img src="w/CrossbowBoltBox.jpg" width="960" height="720" alt="">
+</a>
+<a class="tile" href="#/CrossbowBoltBox">
+  <span class="t-name">Excalibur Quill 16.5&quot; Carbon Bolts, 6-Pack</span>
+  <span class="t-img"><img src="w/CrossbowBoltBox.jpg" width="960" height="720" alt="" loading="lazy">
     <span class="slot"><img src="i/CrossbowBoltBox.png" width="256" height="256" alt=""></span></span>
-  <span class="label">Box of Quill Shafts</span>
-</button>
-<button class="item" type="button" data-k="QuillPointBoxStandard" aria-label="Case of Boltcutter 100 Broadheads: open in 3D">
-  <span class="plate"><img src="w/QuillPointBoxStandard.jpg" width="960" height="720" alt="">
+</a>
+<a class="tile" href="#/QuillPointBoxStandard">
+  <span class="t-name">Excalibur Boltcutter 100 Broadheads, 6-Pack</span>
+  <span class="t-img"><img src="w/QuillPointBoxStandard.jpg" width="960" height="720" alt="" loading="lazy">
     <span class="slot"><img src="i/QuillPointBoxStandard.png" width="256" height="256" alt=""></span></span>
-  <span class="label">Case of Boltcutter 100 Broadheads</span>
-</button>
-<button class="item" type="button" data-k="QuillPointBoxHeavy" aria-label="Case of Boltcutter 150 Broadheads: open in 3D">
-  <span class="plate"><img src="w/QuillPointBoxHeavy.jpg" width="960" height="720" alt="">
+</a>
+<a class="tile" href="#/QuillPointBoxHeavy">
+  <span class="t-name">Excalibur Boltcutter 150 Broadheads, 6-Pack</span>
+  <span class="t-img"><img src="w/QuillPointBoxHeavy.jpg" width="960" height="720" alt="" loading="lazy">
     <span class="slot"><img src="i/QuillPointBoxHeavy.png" width="256" height="256" alt=""></span></span>
-  <span class="label">Case of Boltcutter 150 Broadheads</span>
-</button>
-<button class="item" type="button" data-k="QuillPointBoxMechanical" aria-label="Case of Trailblazer Broadheads: open in 3D">
-  <span class="plate"><img src="w/QuillPointBoxMechanical.jpg" width="960" height="720" alt="">
+</a>
+<a class="tile" href="#/QuillPointBoxMechanical">
+  <span class="t-name">Excalibur Trailblazer 100 Broadheads, 6-Pack</span>
+  <span class="t-img"><img src="w/QuillPointBoxMechanical.jpg" width="960" height="720" alt="" loading="lazy">
     <span class="slot"><img src="i/QuillPointBoxMechanical.png" width="256" height="256" alt=""></span></span>
-  <span class="label">Case of Trailblazer Broadheads</span>
-</button>
-<button class="item" type="button" data-k="QuillPointBoxSmallGame" aria-label="Case of Judo Points: open in 3D">
-  <span class="plate"><img src="w/QuillPointBoxSmallGame.jpg" width="960" height="720" alt="">
+</a>
+<a class="tile" href="#/QuillPointBoxSmallGame">
+  <span class="t-name">Zwickey Judo Points, 6-Pack</span>
+  <span class="t-img"><img src="w/QuillPointBoxSmallGame.jpg" width="960" height="720" alt="" loading="lazy">
     <span class="slot"><img src="i/QuillPointBoxSmallGame.png" width="256" height="256" alt=""></span></span>
-  <span class="label">Case of Judo Points</span>
-</button>
+</a>
   </div>
 </section>
+  </main>
+  <main id="item" hidden>
+    <p class="crumb">in: <a href="#gear">Gear</a> &middot; <span id="a-kit"></span></p>
+    <h1 id="a-name" tabindex="-1"></h1>
+    <div class="article">
+      <aside class="infobox" aria-label="Item details">
+        <h2 class="ib-title" id="ib-name"></h2>
+        <div class="ib-media" id="ib-media">
+          <div class="status" id="status">Loading&hellip;</div>
+          <div class="hint">Drag to turn &middot; scroll to zoom</div>
+          <button class="expand" id="expand" type="button" aria-label="View larger" title="View larger">
+            <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M1.5 6V1.5H6M10 1.5h4.5V6M14.5 10v4.5H10M6 14.5H1.5V10" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+          </button>
+        </div>
+        <h3 class="ib-head">General</h3>
+        <div class="ib-row"><b>Item type</b><span id="ib-type"></span></div>
+        <div class="ib-row"><b>Equipable</b><span id="ib-equip"></span></div>
+        <div class="ib-row"><b>Stackable</b><span id="ib-stack"></span></div>
+        <h3 class="ib-head">Statistics</h3>
+        <div class="ib-row"><b>Weight</b><span id="ib-weight"></span></div>
+        <div class="ib-row"><b>Harvest</b><span id="ib-harvest"></span></div>
+        <details><summary>Advanced data</summary>
+          <div class="ib-row"><b>Item key</b><code id="ib-gear"></code></div>
+        </details>
+      </aside>
+      <div class="body">
+        <figure class="quote"><blockquote id="a-desc"></blockquote><figcaption>In-game description</figcaption></figure>
+        <div id="a-sections"></div>
+      </div>
+    </div>
+    <nav class="navbox" aria-label="All gear"><div class="nb-title">Weaponry Expansion gear</div>
+<div class="nb-row"><div class="nb-group">Medieval crossbow</div><div class="nb-list"><a href="#/Crossbow" data-k="Crossbow">15th-Century Steel Crossbow</a><a href="#/MedievalTiller" data-k="MedievalTiller">Crossbow Stock</a><a href="#/MedievalLock" data-k="MedievalLock">Crossbow Nut and Lock</a><a href="#/MedievalBow" data-k="MedievalBow">Steel Crossbow Bow</a><a href="#/MedievalStirrup" data-k="MedievalStirrup">Stirrup and Bow-Irons</a><a href="#/MedievalString" data-k="MedievalString">Crossbow String</a><a href="#/MedievalLever" data-k="MedievalLever">Goat&#x27;s-Foot Lever</a><a href="#/MedievalPlan1" data-k="MedievalPlan1">Manuscript Plan I: The Stock</a><a href="#/MedievalPlan2" data-k="MedievalPlan2">Manuscript Plan II: The Nut and the Lock</a><a href="#/MedievalPlan3" data-k="MedievalPlan3">Manuscript Plan III: The Steel Bow</a><a href="#/MedievalPlan4" data-k="MedievalPlan4">Manuscript Plan IV: The Stirrup and Bow-Irons</a><a href="#/MedievalPlan5" data-k="MedievalPlan5">Manuscript Plan V: The String</a><a href="#/MedievalPlan6" data-k="MedievalPlan6">Manuscript Plan VI: The Goat&#x27;s-Foot Lever</a></div></div>
+<div class="nb-row"><div class="nb-group">Handmade bolts, quiver and book</div><div class="nb-list"><a href="#/CrossbowBoltCrafted" data-k="CrossbowBoltCrafted">Standard Hunting Bolt</a><a href="#/CrossbowBoltHeavy" data-k="CrossbowBoltHeavy">Heavy Hunting Bolt</a><a href="#/CrossbowBoltBarbed" data-k="CrossbowBoltBarbed">Barbed Bolt</a><a href="#/CrossbowBoltCraftedBroken" data-k="CrossbowBoltCraftedBroken">Broken Handmade Bolt</a><a href="#/CrossbowBoltCraftedShattered" data-k="CrossbowBoltCraftedShattered">Splintered Handmade Bolt</a><a href="#/CrossbowQuiver" data-k="CrossbowQuiver">Canada Point Leather Bolt Quiver</a><a href="#/CrossbowBook" data-k="CrossbowBook">The Crossbow: Mediaeval and Modern, Military and Sporting</a></div></div>
+<div class="nb-row"><div class="nb-group">Excalibur TwinStrike TAC2</div><div class="nb-list"><a href="#/TwinStrike" data-k="TwinStrike">Excalibur TwinStrike TAC2</a><a href="#/TwinStrikeScope" data-k="TwinStrikeScope">Excalibur Tact-100 Illuminated Crossbow Scope</a><a href="#/ChargerEXT" data-k="ChargerEXT">Excalibur Charger EXT Crank Cocking Aid</a><a href="#/ExcaliburQuiver" data-k="ExcaliburQuiver">Excalibur Rebolt Quiver</a><a href="#/CrossbowMaintenanceKit" data-k="CrossbowMaintenanceKit">Excalibur Crossbow Maintenance Utility Pack</a></div></div>
+<div class="nb-row"><div class="nb-group">Quill bolts</div><div class="nb-list"><a href="#/CrossbowBoltCarbon" data-k="CrossbowBoltCarbon">Excalibur Quill Bolt (Boltcutter 100)</a><a href="#/QuillBoltHeavy" data-k="QuillBoltHeavy">Excalibur Quill Bolt (Boltcutter 150)</a><a href="#/QuillBoltMechanical" data-k="QuillBoltMechanical">Excalibur Quill Bolt (Trailblazer 100)</a><a href="#/QuillBoltSmallGame" data-k="QuillBoltSmallGame">Excalibur Quill Bolt (Zwickey Judo)</a><a href="#/QuillShaft" data-k="QuillShaft">Excalibur Quill Shaft</a><a href="#/CrossbowBoltBroken" data-k="CrossbowBoltBroken">Broken Quill Bolt</a><a href="#/QuillPointStandard" data-k="QuillPointStandard">Excalibur Boltcutter 100 Broadhead</a><a href="#/QuillPointHeavy" data-k="QuillPointHeavy">Excalibur Boltcutter 150 Broadhead</a><a href="#/QuillPointMechanical" data-k="QuillPointMechanical">Excalibur Trailblazer 100 Broadhead</a><a href="#/QuillPointSmallGame" data-k="QuillPointSmallGame">Zwickey Judo Point</a><a href="#/CrossbowBoltBox" data-k="CrossbowBoltBox">Excalibur Quill 16.5&quot; Carbon Bolts, 6-Pack</a><a href="#/QuillPointBoxStandard" data-k="QuillPointBoxStandard">Excalibur Boltcutter 100 Broadheads, 6-Pack</a><a href="#/QuillPointBoxHeavy" data-k="QuillPointBoxHeavy">Excalibur Boltcutter 150 Broadheads, 6-Pack</a><a href="#/QuillPointBoxMechanical" data-k="QuillPointBoxMechanical">Excalibur Trailblazer 100 Broadheads, 6-Pack</a><a href="#/QuillPointBoxSmallGame" data-k="QuillPointBoxSmallGame">Zwickey Judo Points, 6-Pack</a></div></div>
+    </nav>
+  </main>
 </div>
-<dialog id="viewer" aria-labelledby="v-name">
-  <div class="v">
-    <div class="stage"><canvas id="stage"></canvas><div class="status" id="status">Loading&hellip;</div>
-      <div class="hint">Drag to turn &middot; scroll or pinch to zoom &middot; right-drag to move</div></div>
-    <div class="info"><div class="slot-lg"><img id="v-icon" alt=""></div><h2 id="v-name"></h2><p id="v-desc"></p></div>
-  </div>
+<dialog id="viewer" aria-label="3D view">
+  <div class="big" id="big"><div class="hint">Drag to turn &middot; scroll or pinch to zoom &middot; right-drag to move</div></div>
   <button class="close" id="v-close" type="button" aria-label="Close">&times;</button>
 </dialog>
-<script type="application/json" id="gear-data">{"Crossbow": {"name": "Medieval Crossbow", "desc": "A fifteenth-century hunting crossbow built from an old treatise's plans: a steel bow of some 500 lb strapped into a beech stock with bow-irons and wedges, a revolving nut and a long trigger. Spanned by hand with its goat's-foot lever, which clips under the fore-end. Slow to span, but it drives a heavy bolt deep. Its six components wear on their own and are mended one by one.", "parts": [["m/Crossbow__0.xm.gz", "t/medieval_bow.jpg"], ["m/Crossbow__1.xm.gz", "t/medieval_lever.jpg"], ["m/Crossbow__2.xm.gz", "t/medieval_lock.jpg"], ["m/Crossbow__3.xm.gz", "t/medieval_stirrup.jpg"], ["m/Crossbow__4.xm.gz", "t/medieval_string.jpg"], ["m/Crossbow__5.xm.gz", "t/medieval_tiller.jpg"]]}, "MedievalTiller": {"name": "Crossbow Stock", "desc": "The beech stock of a medieval crossbow with its sight strip, iron cap and brass bolt groove, and the clips that hold its lever. One of the six parts of the crossbow, assembled at a workbench.", "parts": [["m/MedievalTiller__0.xm.gz", "t/medieval_tiller.jpg"]]}, "MedievalLock": {"name": "Crossbow Lock", "desc": "The revolving steel nut in its socket, the pierced lock plates, the long trigger and its plate, the pins, and the pin the lever bears on. One of the six parts of the medieval crossbow.", "parts": [["m/MedievalLock__0.xm.gz", "t/medieval_lock.jpg"]]}, "MedievalBow": {"name": "Steel Crossbow Bow", "desc": "A bow of spring steel, two and a half feet between its ends, flat with squared edges, tempered to bend without breaking: it draws some 500 lb. One of the six parts of the medieval crossbow.", "parts": [["m/MedievalBow__0.xm.gz", "t/medieval_bow.jpg"]]}, "MedievalStirrup": {"name": "Stirrup and Bow-irons", "desc": "The iron stirrup the foot holds the crossbow down by, the two bow-irons that strap the bow to the stock, and the guards and wedges that draw them tight. One of the six parts of the medieval crossbow.", "parts": [["m/MedievalStirrup__0.xm.gz", "t/medieval_stirrup.jpg"]]}, "MedievalString": {"name": "Crossbow String", "desc": "A heavy bow-string of twisted, waxed gut, its loops and centre wrapped. One of the six parts of the medieval crossbow.", "parts": [["m/MedievalString__0.xm.gz", "t/medieval_string.jpg"]]}, "MedievalLever": {"name": "Goat's-foot Lever", "desc": "A forked iron lever with a hinged handle and a claw-frame, to draw the crossbow's string onto the nut by hand. One of the six parts of the medieval crossbow; on it, the lever clips under the fore-end.", "parts": [["m/MedievalLever__0.xm.gz", "t/medieval_lever.jpg"]]}, "MedievalPlan1": {"name": "Manuscript Plan I: The Stock", "desc": "A sheet in the blacksmith's own hand, folded in four: the beech stock of his crossbow, with its sight, its iron cap and the groove for the bolt, drawn, measured and noted, with forge soot on it. Taking it teaches you to make the stock at a workbench. Hang it on a wall or keep it; once learned, it can be harvested for paper. At the foot, in red pencil: \u201cThe lock I filed out at the round-roofed garage on the coast road. Next sheet is on the desk there.\u201d", "parts": [["m/MedievalPlan1__0.xm.gz", "t/plan_1.jpg"]]}, "MedievalPlan2": {"name": "Manuscript Plan II: The Nut and the Lock", "desc": "A sheet in the blacksmith's own hand, folded in four: the lock: the revolving nut that holds the string, its socket, the lock plates, the trigger and the pins, drawn, measured and noted, with forge soot on it. Taking it teaches you to forge the lock. Hang it on a wall or keep it; once learned, it can be harvested for paper. At the foot, in red pencil: \u201cThe bow I tempered at the lighthouse out on the point. Look on the table.\u201d", "parts": [["m/MedievalPlan2__0.xm.gz", "t/plan_2.jpg"]]}, "MedievalPlan3": {"name": "Manuscript Plan III: The Steel Bow", "desc": "A sheet in the blacksmith's own hand, folded in four: the bow of spring steel, two and a half feet between its ends, drawn, measured and noted, with forge soot on it. Taking it teaches you to forge the bow. Hang it on a wall or keep it; once learned, it can be harvested for paper. At the foot, in red pencil: \u201cIrons and stirrup came out of the railway's yard, up the broken line. The office desk.\u201d", "parts": [["m/MedievalPlan3__0.xm.gz", "t/plan_3.jpg"]]}, "MedievalPlan4": {"name": "Manuscript Plan IV: The Stirrup and Bow-irons", "desc": "A sheet in the blacksmith's own hand, folded in four: the iron stirrup and the two bow-irons that hold the bow to the stock, with their guards and wedges, drawn, measured and noted, with forge soot on it. Taking it teaches you to forge them. Hang it on a wall or keep it; once learned, it can be harvested for paper. At the foot, in red pencil: \u201cThe string I twisted at the farmhouse in the valley. Upstairs.\u201d", "parts": [["m/MedievalPlan4__0.xm.gz", "t/plan_4.jpg"]]}, "MedievalPlan5": {"name": "Manuscript Plan V: The String", "desc": "A sheet in the blacksmith's own hand, folded in four: the bow-string of twisted, waxed gut, its loops and middle whipped, drawn, measured and noted, with forge soot on it. Taking it teaches you to make the string at a workbench. Hang it on a wall or keep it; once learned, it can be harvested for paper. At the foot, in red pencil: \u201cThe lever's sheet I left in Milton, at the credit union. On the desk.\u201d", "parts": [["m/MedievalPlan5__0.xm.gz", "t/plan_5.jpg"]]}, "MedievalPlan6": {"name": "Manuscript Plan VI: The Goat's-foot Lever", "desc": "A sheet in the blacksmith's own hand, folded in four: the goat's-foot lever that spans the crossbow by hand: its fork, its hinged handle and its claws, drawn, measured and noted, with forge soot on it. Taking it teaches you to forge the lever. Hang it on a wall or keep it; once learned, it can be harvested for paper. At the foot, in red pencil: \u201cThat's all six. Put it together at a bench and drive the wedges home. Good hunting.\u201d", "parts": [["m/MedievalPlan6__0.xm.gz", "t/plan_6.jpg"]]}, "CrossbowBoltCrafted": {"name": "Standard Hunting Bolt", "desc": "A quarrel for the medieval crossbow: an ash shaft swelling towards a socketed steel head with four edges, and a flattened butt that sits between the fingers of the nut. The all-round bolt, for wolves and deer.", "parts": [["m/CrossbowBoltCrafted__0.xm.gz", "t/bolt_crafted_albedo.jpg"]]}, "CrossbowBoltHeavy": {"name": "Heavy Hunting Bolt", "desc": "A quarrel with a long steel blade riveted to its socket, like the old crossbowmen's bolts for deer: the heaviest of the handmade bolts and the hardest-hitting. For bears, cougars and moose; it spoils small game.", "parts": [["m/CrossbowBoltHeavy__0.xm.gz", "t/bolt_crafted_albedo.jpg"]]}, "CrossbowBoltBarbed": {"name": "Barbed Bolt", "desc": "A quarrel with a flat, barbed head that stays in the wound. It hits less hard than the others, but the animal bleeds heavily as it runs: for tracking deer and moose.", "parts": [["m/CrossbowBoltBarbed__0.xm.gz", "t/bolt_crafted_albedo.jpg"]]}, "CrossbowBoltCraftedBroken": {"name": "Broken Handmade Bolt", "desc": "A handmade bolt whose head broke off in the target. The shaft is still good: bind on a new head of any kind with cured gut, or harvest it for its shaft.", "parts": [["m/CrossbowBoltCraftedBroken__0.xm.gz", "t/bolt_crafted_albedo.jpg"]]}, "CrossbowBoltCraftedShattered": {"name": "Splintered Handmade Bolt", "desc": "A handmade bolt broken beyond repair: the shaft split along its length, the head gone. The wood still makes a stick.", "parts": [["m/CrossbowBoltCraftedShattered__0.xm.gz", "t/bolt_crafted_albedo.jpg"]]}, "CrossbowQuiver": {"name": "Leather Bolt Quiver", "desc": "A bolt quiver of thick brown leather built up in layers, lined with sheepskin, its rim and bottom whipped with a thong and its wrap closed by a brass buckle. An embroidered Canadian flag is sewn on the front, the maker's Cpoint logo stitched on its red bar, and the maker's patch, Canada Point, on the back. It holds twelve handmade bolts or thirty-six Quill bolts, three Quill bolts in a handmade bolt's room, points up; bolts in it weigh 95% less. Open it from the inventory or where it lies. A crossbow reloads from it once the loose bolts in your pack are gone.", "parts": [["m/CrossbowQuiver__0.xm.gz", "t/quiver_albedo.jpg"], ["m/CrossbowQuiver__1.xm.gz", "t/bolt_crafted_albedo.jpg"]]}, "CrossbowBook": {"name": "The Crossbow", "desc": "Sir Ralph Payne-Gallwey's treatise on the crossbow (London, 1903). Study it to learn how to make and mend the three kinds of handmade bolt, and keep the crossbow itself in good order. A blacksmith who once lived on the island built a crossbow from it and left his own drawings of it, six sheets, one for each part. Tucked in the back cover, his note in pencil: \u201cThe first sheet is at the camp office by the lake. Upstairs.\u201d", "parts": [["m/CrossbowBook__0.xm.gz", "t/book_albedo.jpg"]]}, "TwinStrike": {"name": "TwinStrike Crossbow", "desc": "The Excalibur TwinStrike TAC2, a modern two-shot recurve crossbow: a follow-up shot without reloading. DualFire: two frictionless, match-grade 4 lb triggers, the front one for the upper rail, the rear one for the lower. CeaseFire: it won't fire without a bolt. The Charger EXT crank cocks it, or lets it down safely without a shot. 340 fps; 358 lb draw; 21.1 in wide cocked, 25.25 in uncocked; 7.75 lb bare, 9.8 lb with its accessories. Repaired only with the Crossbow Maintenance Kit.", "parts": [["m/TwinStrike__0.xm.gz", "t/ts_crank.jpg"], ["m/TwinStrike__1.xm.gz", "t/ts_frame.jpg"], ["m/TwinStrike__2.xm.gz", "t/ts_limbs.jpg"], ["m/TwinStrike__3.xm.gz", "t/ts_scope.jpg"], ["m/TwinStrike__4.xm.gz", "t/ts_stock.jpg"]]}, "TwinStrikeScope": {"name": "Tact-100 Scope", "desc": "Excalibur's Tact-100: a 1.5-5x32 illuminated crossbow scope on a 30 mm tube, flip-up caps on both lenses. Its multi-range reticle is zeroed at 20 yards, the centre ring, with a ring for every ten yards under it to 100, each numbered; they are true with the power ring at 3x, its speed dial set for the TwinStrike's 340 fps. The illumination lights the rings red or green. Fit it to the TwinStrike in the inventory or with the crossbow in your hands (the scope key); then the magnification key turns its power ring and the illumination key lights its reticle.", "parts": [["m/TwinStrikeScope__0.xm.gz", "t/ts_scope.jpg"]]}, "ChargerEXT": {"name": "Charger EXT", "desc": "Excalibur's Charger EXT: a quiet, removable crank that draws the TwinStrike's two strings back to full cock, and lets them down again without loosing a bolt. Fitted to the crossbow's butt, it is what makes reloading possible: about 12 lb of effort on the handle against 358 lb of draw.", "parts": [["m/ChargerEXT__0.xm.gz", "t/ts_crank.jpg"]]}, "ExcaliburQuiver": {"name": "Excalibur Quiver", "desc": "Excalibur's four-bolt quiver for the TwinStrike: two woven carbon tubes, a rubber gripper for the nocks and a camo hood over the points. It holds four Quill bolts and nothing else, and they weigh next to nothing in it. Fitted to the TwinStrike through the inventory, it rides under the right limbs and the crossbow reloads from it first.", "parts": [["m/ExcaliburQuiver__0.xm.gz", "t/ts_quiver.jpg"], ["m/ExcaliburQuiver__1.xm.gz", "t/ts_quill.jpg"]]}, "CrossbowMaintenanceKit": {"name": "Crossbow Maintenance Kit", "desc": "Excalibur's crossbow maintenance pack: X-Slick, the silicone lube for the rail; Ex-Wax for the strings' servings; Ex-Oil against rust on the trigger and the hardware. The only way to repair the TwinStrike, and each repair uses some of it.", "parts": [["m/CrossbowMaintenanceKit__0.xm.gz", "t/ts_kit.jpg"]]}, "CrossbowBoltCarbon": {"name": "Standard Broadhead Quill Bolt", "desc": "An Excalibur Quill 16.5-inch carbon bolt with a Boltcutter 100-grain broadhead: three fixed blades, 1-1/16 in across. Balanced: wolves, deer, general hunting. Often survives the shot; a broken one can't be mended. Harvest it to unscrew its point.", "parts": [["m/CrossbowBoltCarbon__0.xm.gz", "t/ts_quill.jpg"]]}, "QuillBoltHeavy": {"name": "Heavy Broadhead Quill Bolt", "desc": "An Excalibur Quill 16.5-inch carbon bolt with a Boltcutter 150-grain broadhead, all stainless: the hardest blow, for bears and cougars, and moose. Often survives the shot; a broken one can't be mended. Harvest it to unscrew its point.", "parts": [["m/QuillBoltHeavy__0.xm.gz", "t/ts_quill.jpg"]]}, "QuillBoltMechanical": {"name": "Mechanical Broadhead Quill Bolt", "desc": "An Excalibur Quill 16.5-inch carbon bolt with a Trailblazer mechanical broadhead: its two blades open in the animal. A lighter blow, but the wound bleeds heavily: deer and moose bleed out far sooner. Harvest it to unscrew its point.", "parts": [["m/QuillBoltMechanical__0.xm.gz", "t/ts_quill.jpg"]]}, "QuillBoltSmallGame": {"name": "Small-Game Quill Bolt", "desc": "An Excalibur Quill 16.5-inch carbon bolt with a judo point: a steel blunt whose spring arms catch in the grass. For rabbits and other small game, without spoiling the meat; next to useless on anything bigger. Harvest it to unscrew its point.", "parts": [["m/QuillBoltSmallGame__0.xm.gz", "t/ts_quill.jpg"]]}, "QuillShaft": {"name": "Quill Shaft", "desc": "An Excalibur Quill 16.5-inch carbon shaft, 350 grain, its Rhino nock and three vanes on, its insert waiting for a point. Screw a point in to make a bolt (crafting, anywhere, a minute).", "parts": [["m/QuillShaft__0.xm.gz", "t/ts_quill.jpg"]]}, "CrossbowBoltBroken": {"name": "Broken Quill Bolt", "desc": "The tail of a Quill bolt that snapped on impact, its point lost in the target. Carbon can't be mended: strip it for its metal fittings.", "parts": [["m/CrossbowBoltBroken__0.xm.gz", "t/ts_quill.jpg"]]}, "QuillPointStandard": {"name": "Boltcutter 100 Broadhead", "desc": "Excalibur's Boltcutter, 100 grain: three fixed, vented blades 1-1/16 in across on a blue aluminium ferrule. Balanced: wolves, deer, general hunting. Screw it into a Quill shaft.", "parts": [["m/QuillPointStandard__0.xm.gz", "t/ts_quill.jpg"]]}, "QuillPointHeavy": {"name": "Boltcutter 150 Broadhead", "desc": "Excalibur's Boltcutter, 150 grain, all stainless: the same blades on a longer, heavier ferrule. The hardest blow: bears, cougars, moose. Screw it into a Quill shaft.", "parts": [["m/QuillPointHeavy__0.xm.gz", "t/ts_quill.jpg"]]}, "QuillPointMechanical": {"name": "Trailblazer Mechanical Broadhead", "desc": "Excalibur's Trailblazer, 100 grain: two blades folded along its ferrule open as it strikes, for a wide wound that bleeds heavily. Screw it into a Quill shaft.", "parts": [["m/QuillPointMechanical__0.xm.gz", "t/ts_quill.jpg"]]}, "QuillPointSmallGame": {"name": "Judo Small-Game Point", "desc": "A 100-grain screw-in judo point: a steel blunt with four spring-wire arms. Stuns and kills small game without spoiling the meat. Screw it into a Quill shaft.", "parts": [["m/QuillPointSmallGame__0.xm.gz", "t/ts_quill.jpg"]]}, "CrossbowBoltBox": {"name": "Box of Quill Shafts", "desc": "A box of 6 Excalibur Quill 16.5-inch carbon shafts for the TwinStrike, without points (they are sold apart). Open it (15 seconds) to take the shafts out; the card is good for a paper stack.", "parts": [["m/CrossbowBoltBox__0.xm.gz", "t/ts_qbox.jpg"]]}, "QuillPointBoxStandard": {"name": "Case of Boltcutter 100 Broadheads", "desc": "Excalibur's case of six Boltcutter 100-grain broadheads in a foam bed. Open it (15 seconds) to take them out.", "parts": [["m/QuillPointBoxStandard__0.xm.gz", "t/ts_qbox.jpg"]]}, "QuillPointBoxHeavy": {"name": "Case of Boltcutter 150 Broadheads", "desc": "Excalibur's case of six Boltcutter 150-grain broadheads in a foam bed. Open it (15 seconds) to take them out.", "parts": [["m/QuillPointBoxHeavy__0.xm.gz", "t/ts_qbox.jpg"]]}, "QuillPointBoxMechanical": {"name": "Case of Trailblazer Broadheads", "desc": "Excalibur's case of six Trailblazer mechanical broadheads in a foam bed. Open it (15 seconds) to take them out.", "parts": [["m/QuillPointBoxMechanical__0.xm.gz", "t/ts_qbox.jpg"]]}, "QuillPointBoxSmallGame": {"name": "Case of Judo Points", "desc": "A case of six screw-in judo points for small game, in a foam bed. Open it (15 seconds) to take them out.", "parts": [["m/QuillPointBoxSmallGame__0.xm.gz", "t/ts_qbox.jpg"]]}}</script>
+<script type="application/json" id="gear-data">{"Crossbow": {"name": "15th-Century Steel Crossbow", "desc": "A hunting crossbow built to a fifteenth-century plan: a steel bow wedged into a beech stock, spanned by hand with a goat's-foot lever. Slow to load, but it drives a heavy bolt deep. Its six parts wear out on their own and are mended one by one at a Work Bench.", "kit": "Medieval crossbow", "parts": [["m/Crossbow__0.xm.gz", "t/medieval_bow.jpg"], ["m/Crossbow__1.xm.gz", "t/medieval_lever.jpg"], ["m/Crossbow__2.xm.gz", "t/medieval_lock.jpg"], ["m/Crossbow__3.xm.gz", "t/medieval_stirrup.jpg"], ["m/Crossbow__4.xm.gz", "t/medieval_string.jpg"], ["m/Crossbow__5.xm.gz", "t/medieval_tiller.jpg"]], "type": "Tool", "stack": false, "equip": true, "weight": "6.80 kg (14.99 lbs)", "gear": "GEAR_Crossbow", "craft": [{"key": "Crossbow", "title": "15th-Century Steel Crossbow", "facility": "Work Bench", "tool": "Heavy Hammer", "fire": false, "time": "2 hours", "makes": 1, "needs": [[1, "Crossbow Stock", "MedievalTiller"], [1, "Crossbow Nut and Lock", "MedievalLock"], [1, "Steel Crossbow Bow", "MedievalBow"], [1, "Stirrup and Bow-Irons", "MedievalStirrup"], [1, "Crossbow String", "MedievalString"], [1, "Goat's-Foot Lever", "MedievalLever"]], "learn": ["Learned from all six Manuscript Plans", null]}], "source": null, "harvest": [[1, "Scrap Metal", null], [1, "Crossbow Stock", "MedievalTiller"], [1, "Crossbow Nut and Lock", "MedievalLock"], [1, "Steel Crossbow Bow", "MedievalBow"], [1, "Stirrup and Bow-Irons", "MedievalStirrup"], [1, "Crossbow String", "MedievalString"], [1, "Goat's-Foot Lever", "MedievalLever"]], "hnote": "Each part comes back as worn as it was."}, "MedievalTiller": {"name": "Crossbow Stock", "desc": "A beech crossbow stock with its sight, iron butt cap and bolt groove. One of the six parts of a medieval crossbow.", "kit": "Medieval crossbow", "parts": [["m/MedievalTiller__0.xm.gz", "t/medieval_tiller.jpg"]], "type": "Material", "stack": true, "equip": false, "weight": "1.60 kg (3.53 lbs)", "gear": "GEAR_MedievalTiller", "craft": [{"key": "MedievalTiller", "title": "Crossbow Stock", "facility": "Work Bench", "tool": null, "fire": false, "time": "4 hours", "makes": 1, "needs": [[2, "Hardwood", null], [1, "Scrap Metal", null]], "learn": ["Learned from ", "MedievalPlan1"]}], "source": null, "harvest": [[1, "Hardwood", null], [1, "Scrap Metal", null]], "hnote": null}, "MedievalLock": {"name": "Crossbow Nut and Lock", "desc": "The revolving nut that holds the string, with its socket, lock plates, trigger and pins. One of the six parts of a medieval crossbow.", "kit": "Medieval crossbow", "parts": [["m/MedievalLock__0.xm.gz", "t/medieval_lock.jpg"]], "type": "Material", "stack": true, "equip": false, "weight": "0.85 kg (1.87 lbs)", "gear": "GEAR_MedievalLock", "craft": [{"key": "MedievalLock", "title": "Crossbow Nut and Lock", "facility": "Forge", "tool": "Heavy Hammer", "fire": true, "time": "3 hours", "makes": 1, "needs": [[3, "Scrap Metal", null]], "learn": ["Learned from ", "MedievalPlan2"]}], "source": null, "harvest": [[2, "Scrap Metal", null]], "hnote": null}, "MedievalBow": {"name": "Steel Crossbow Bow", "desc": "A bow of tempered spring steel, two and a half feet from tip to tip. Draws some 500 lb. One of the six parts of a medieval crossbow.", "kit": "Medieval crossbow", "parts": [["m/MedievalBow__0.xm.gz", "t/medieval_bow.jpg"]], "type": "Material", "stack": true, "equip": false, "weight": "2.20 kg (4.85 lbs)", "gear": "GEAR_MedievalBow", "craft": [{"key": "MedievalBow", "title": "Steel Crossbow Bow", "facility": "Forge", "tool": "Heavy Hammer", "fire": true, "time": "6 hours", "makes": 1, "needs": [[6, "Scrap Metal", null]], "learn": ["Learned from ", "MedievalPlan3"]}], "source": null, "harvest": [[4, "Scrap Metal", null]], "hnote": null}, "MedievalStirrup": {"name": "Stirrup and Bow-Irons", "desc": "The iron stirrup you hold the crossbow down with, and the bow-irons and wedges that bind the bow to the stock. One of the six parts of a medieval crossbow.", "kit": "Medieval crossbow", "parts": [["m/MedievalStirrup__0.xm.gz", "t/medieval_stirrup.jpg"]], "type": "Material", "stack": true, "equip": false, "weight": "0.95 kg (2.09 lbs)", "gear": "GEAR_MedievalStirrup", "craft": [{"key": "MedievalStirrup", "title": "Stirrup and Bow-Irons", "facility": "Forge", "tool": "Heavy Hammer", "fire": true, "time": "2 hours", "makes": 1, "needs": [[3, "Scrap Metal", null]], "learn": ["Learned from ", "MedievalPlan4"]}], "source": null, "harvest": [[2, "Scrap Metal", null]], "hnote": null}, "MedievalString": {"name": "Crossbow String", "desc": "A heavy bow-string of twisted, waxed gut. One of the six parts of a medieval crossbow.", "kit": "Medieval crossbow", "parts": [["m/MedievalString__0.xm.gz", "t/medieval_string.jpg"]], "type": "Material", "stack": true, "equip": false, "weight": "0.10 kg (0.22 lbs)", "gear": "GEAR_MedievalString", "craft": [{"key": "MedievalString", "title": "Crossbow String", "facility": "Work Bench", "tool": null, "fire": false, "time": "1 hour", "makes": 1, "needs": [[3, "Cured Gut", null]], "learn": ["Learned from ", "MedievalPlan5"]}], "source": null, "harvest": [[1, "Cured Gut", null]], "hnote": null}, "MedievalLever": {"name": "Goat's-Foot Lever", "desc": "A forked iron lever that draws the string back onto the nut by hand. One of the six parts of a medieval crossbow.", "kit": "Medieval crossbow", "parts": [["m/MedievalLever__0.xm.gz", "t/medieval_lever.jpg"]], "type": "Material", "stack": true, "equip": false, "weight": "1.10 kg (2.43 lbs)", "gear": "GEAR_MedievalLever", "craft": [{"key": "MedievalLever", "title": "Goat's-Foot Lever", "facility": "Forge", "tool": "Heavy Hammer", "fire": true, "time": "3 hours", "makes": 1, "needs": [[3, "Scrap Metal", null]], "learn": ["Learned from ", "MedievalPlan6"]}], "source": null, "harvest": [[2, "Scrap Metal", null]], "hnote": null}, "MedievalPlan1": {"name": "Manuscript Plan I: The Stock", "desc": "The blacksmith's drawing of his crossbow's beech stock, measured and noted, with forge soot on it. Teaches you to make the stock at a Work Bench. In red pencil at the foot: \u201cThe lock I filed out at the round-roofed garage on the coast road. Next sheet is on the desk there.\u201d", "kit": "Medieval crossbow", "parts": [["m/MedievalPlan1__0.xm.gz", "t/plan_1.jpg"]], "type": "Material", "stack": true, "equip": false, "weight": "0.02 kg (0.04 lbs)", "gear": "GEAR_MedievalPlan1", "craft": [], "source": "Found in the world. Picking it up teaches you its part.", "harvest": [[1, "Stack of Papers", null]], "hnote": null}, "MedievalPlan2": {"name": "Manuscript Plan II: The Nut and the Lock", "desc": "The blacksmith's drawing of the lock: the revolving nut that holds the string, the trigger and the pins. Teaches you to make it at a Forge. In red pencil at the foot: \u201cThe bow I tempered at the lighthouse out on the point. Look on the table.\u201d", "kit": "Medieval crossbow", "parts": [["m/MedievalPlan2__0.xm.gz", "t/plan_2.jpg"]], "type": "Material", "stack": true, "equip": false, "weight": "0.02 kg (0.04 lbs)", "gear": "GEAR_MedievalPlan2", "craft": [], "source": "Found in the world. Picking it up teaches you its part.", "harvest": [[1, "Stack of Papers", null]], "hnote": null}, "MedievalPlan3": {"name": "Manuscript Plan III: The Steel Bow", "desc": "The blacksmith's drawing of the bow: spring steel, two and a half feet from tip to tip. Teaches you to make it at a Forge. In red pencil at the foot: \u201cIrons and stirrup came out of the railway's yard, up the broken line. The office desk.\u201d", "kit": "Medieval crossbow", "parts": [["m/MedievalPlan3__0.xm.gz", "t/plan_3.jpg"]], "type": "Material", "stack": true, "equip": false, "weight": "0.02 kg (0.04 lbs)", "gear": "GEAR_MedievalPlan3", "craft": [], "source": "Found in the world. Picking it up teaches you its part.", "harvest": [[1, "Stack of Papers", null]], "hnote": null}, "MedievalPlan4": {"name": "Manuscript Plan IV: The Stirrup and Bow-Irons", "desc": "The blacksmith's drawing of the stirrup and the bow-irons that bind the bow to the stock. Teaches you to make them at a Forge. In red pencil at the foot: \u201cThe string I twisted at the farmhouse in the valley. Upstairs.\u201d", "kit": "Medieval crossbow", "parts": [["m/MedievalPlan4__0.xm.gz", "t/plan_4.jpg"]], "type": "Material", "stack": true, "equip": false, "weight": "0.02 kg (0.04 lbs)", "gear": "GEAR_MedievalPlan4", "craft": [], "source": "Found in the world. Picking it up teaches you its part.", "harvest": [[1, "Stack of Papers", null]], "hnote": null}, "MedievalPlan5": {"name": "Manuscript Plan V: The String", "desc": "The blacksmith's drawing of the bow-string: twisted, waxed gut, its loops whipped. Teaches you to make it at a Work Bench. In red pencil at the foot: \u201cThe lever's sheet I left in Milton, at the credit union. On the desk.\u201d", "kit": "Medieval crossbow", "parts": [["m/MedievalPlan5__0.xm.gz", "t/plan_5.jpg"]], "type": "Material", "stack": true, "equip": false, "weight": "0.02 kg (0.04 lbs)", "gear": "GEAR_MedievalPlan5", "craft": [], "source": "Found in the world. Picking it up teaches you its part.", "harvest": [[1, "Stack of Papers", null]], "hnote": null}, "MedievalPlan6": {"name": "Manuscript Plan VI: The Goat's-Foot Lever", "desc": "The blacksmith's drawing of the goat's-foot lever that spans the crossbow by hand. Teaches you to make it at a Forge. In red pencil at the foot: \u201cThat's all six. Put it together at a bench and drive the wedges home. Good hunting.\u201d", "kit": "Medieval crossbow", "parts": [["m/MedievalPlan6__0.xm.gz", "t/plan_6.jpg"]], "type": "Material", "stack": true, "equip": false, "weight": "0.02 kg (0.04 lbs)", "gear": "GEAR_MedievalPlan6", "craft": [], "source": "Found in the world. Picking it up teaches you its part.", "harvest": [[1, "Stack of Papers", null]], "hnote": null}, "CrossbowBoltCrafted": {"name": "Standard Hunting Bolt", "desc": "A handmade quarrel: an Arrow Shaft with a four-sided steel head, no feathers needed. The all-rounder, for wolves and deer. Overkill on rabbits.", "kit": "Handmade bolts, quiver and book", "parts": [["m/CrossbowBoltCrafted__0.xm.gz", "t/bolt_crafted_albedo.jpg"]], "type": "Other", "stack": true, "equip": false, "weight": "0.07 kg (0.16 lbs)", "gear": "GEAR_CrossbowBoltCrafted", "craft": [{"key": "CrossbowBoltCrafted", "title": "Standard Hunting Bolt", "facility": "Work Bench", "tool": null, "fire": false, "time": "45 minutes", "makes": 1, "needs": [[1, "Arrow Shaft", null], [1, "Arrowhead", null]], "learn": ["Learned from ", "CrossbowBook"]}, {"key": "CrossbowBoltCrafted", "title": "Repair: Standard Hunting Bolt", "facility": "Anywhere", "tool": null, "fire": false, "time": "30 minutes", "makes": 1, "needs": [[1, "Broken Handmade Bolt", "CrossbowBoltCraftedBroken"], [1, "Arrowhead", null], [1, "Cured Gut", null]], "learn": ["Learned from ", "CrossbowBook"]}], "source": null, "harvest": [[1, "Arrow Shaft", null], [1, "Arrowhead", null]], "hnote": null}, "CrossbowBoltHeavy": {"name": "Heavy Hunting Bolt", "desc": "A quarrel with a long, riveted steel blade, like the old bolts for killing deer. The hardest-hitting handmade bolt, for bears, cougars and moose.", "kit": "Handmade bolts, quiver and book", "parts": [["m/CrossbowBoltHeavy__0.xm.gz", "t/bolt_crafted_albedo.jpg"]], "type": "Other", "stack": true, "equip": false, "weight": "0.09 kg (0.20 lbs)", "gear": "GEAR_CrossbowBoltHeavy", "craft": [{"key": "CrossbowBoltHeavy", "title": "Heavy Hunting Bolt", "facility": "Work Bench", "tool": null, "fire": false, "time": "1 hour", "makes": 1, "needs": [[1, "Arrow Shaft", null], [1, "Arrowhead", null], [1, "Scrap Metal", null]], "learn": ["Learned from ", "CrossbowBook"]}, {"key": "CrossbowBoltHeavy", "title": "Repair: Heavy Hunting Bolt", "facility": "Anywhere", "tool": null, "fire": false, "time": "30 minutes", "makes": 1, "needs": [[1, "Broken Handmade Bolt", "CrossbowBoltCraftedBroken"], [1, "Arrowhead", null], [1, "Scrap Metal", null], [1, "Cured Gut", null]], "learn": ["Learned from ", "CrossbowBook"]}], "source": null, "harvest": [[1, "Arrow Shaft", null], [1, "Arrowhead", null], [1, "Scrap Metal", null]], "hnote": null}, "CrossbowBoltBarbed": {"name": "Barbed Bolt", "desc": "A quarrel with a flat, barbed head that stays in the wound. Hits lighter, but deer and moose bleed out far sooner.", "kit": "Handmade bolts, quiver and book", "parts": [["m/CrossbowBoltBarbed__0.xm.gz", "t/bolt_crafted_albedo.jpg"]], "type": "Other", "stack": true, "equip": false, "weight": "0.07 kg (0.16 lbs)", "gear": "GEAR_CrossbowBoltBarbed", "craft": [{"key": "CrossbowBoltBarbed", "title": "Barbed Bolt", "facility": "Work Bench", "tool": null, "fire": false, "time": "1 hour", "makes": 1, "needs": [[1, "Arrow Shaft", null], [2, "Arrowhead", null]], "learn": ["Learned from ", "CrossbowBook"]}, {"key": "CrossbowBoltBarbed", "title": "Repair: Barbed Bolt", "facility": "Anywhere", "tool": null, "fire": false, "time": "30 minutes", "makes": 1, "needs": [[1, "Broken Handmade Bolt", "CrossbowBoltCraftedBroken"], [2, "Arrowhead", null], [1, "Cured Gut", null]], "learn": ["Learned from ", "CrossbowBook"]}], "source": null, "harvest": [[1, "Arrow Shaft", null], [2, "Arrowhead", null]], "hnote": null}, "CrossbowBoltCraftedBroken": {"name": "Broken Handmade Bolt", "desc": "A handmade bolt that lost its head in the target. The shaft is still good: bind on a new head with Cured Gut, or harvest it for the Arrow Shaft.", "kit": "Handmade bolts, quiver and book", "parts": [["m/CrossbowBoltCraftedBroken__0.xm.gz", "t/bolt_crafted_albedo.jpg"]], "type": "Other", "stack": true, "equip": false, "weight": "0.03 kg (0.07 lbs)", "gear": "GEAR_CrossbowBoltCraftedBroken", "craft": [], "source": "Left behind when a handmade bolt loses its head in the target. Bind on a new head to mend it: see the repair recipes of the three handmade bolts.", "harvest": [[1, "Arrow Shaft", null]], "hnote": null}, "CrossbowBoltCraftedShattered": {"name": "Splintered Handmade Bolt", "desc": "A handmade bolt split from end to end. Good for a Stick, and that's about it.", "kit": "Handmade bolts, quiver and book", "parts": [["m/CrossbowBoltCraftedShattered__0.xm.gz", "t/bolt_crafted_albedo.jpg"]], "type": "Other", "stack": true, "equip": false, "weight": "0.02 kg (0.04 lbs)", "gear": "GEAR_CrossbowBoltCraftedShattered", "craft": [], "source": "Left behind when a handmade bolt shatters on impact.", "harvest": [[1, "Stick", null]], "hnote": null}, "CrossbowQuiver": {"name": "Canada Point Leather Bolt Quiver", "desc": "A hand-stitched leather quiver lined with sheepskin, a Canadian flag and the C-Point logo on the front. Holds twelve handmade bolts or thirty-six Quill bolts, and they weigh 95% less in it. Your crossbow reloads from it once the loose bolts run out.", "kit": "Handmade bolts, quiver and book", "parts": [["m/CrossbowQuiver__0.xm.gz", "t/quiver_albedo.jpg"], ["m/CrossbowQuiver__1.xm.gz", "t/bolt_crafted_albedo.jpg"]], "type": "Tool", "stack": false, "equip": false, "weight": "0.45 kg (0.99 lbs)", "gear": "GEAR_CrossbowQuiver", "craft": [], "source": "Sold by the trader.", "harvest": [[1, "Cured Deer Hide", null]], "hnote": "Any bolts in it go back into your pack first."}, "CrossbowBook": {"name": "The Crossbow: Mediaeval and Modern, Military and Sporting", "desc": "Sir Ralph Payne-Gallwey's 1903 treatise on the crossbow. Researching it will improve your Archery Skill and teach you to make and mend handmade bolts. Tucked in the back cover, a blacksmith's note: \u201cBuilt one from this. I left a drawing of each part where I made it. The first is at the camp office by the lake. Upstairs.\u201d", "kit": "Handmade bolts, quiver and book", "parts": [["m/CrossbowBook__0.xm.gz", "t/book_albedo.jpg"]], "type": "Tool, Fire Starting", "stack": false, "equip": false, "weight": "1.50 kg (3.31 lbs)", "gear": "GEAR_CrossbowBook", "craft": [], "source": "Found in the world.", "harvest": [], "hnote": "Burns as fuel."}, "TwinStrike": {"name": "Excalibur TwinStrike TAC2", "desc": "A modern recurve crossbow with two rails and two triggers, for a second shot without reloading. Cocked with the Charger EXT crank, and repaired only with a Crossbow Maintenance Utility Pack.", "kit": "Excalibur TwinStrike TAC2", "parts": [["m/TwinStrike__0.xm.gz", "t/ts_crank.jpg"], ["m/TwinStrike__1.xm.gz", "t/ts_frame.jpg"], ["m/TwinStrike__2.xm.gz", "t/ts_limbs.jpg"], ["m/TwinStrike__3.xm.gz", "t/ts_scope.jpg"], ["m/TwinStrike__4.xm.gz", "t/ts_stock.jpg"]], "type": "Tool", "stack": false, "equip": true, "weight": "3.52 kg (7.76 lbs)", "gear": "GEAR_TwinStrike", "craft": [], "source": "Sold by the trader, with its Charger EXT fitted.", "harvest": [[8, "Scrap Metal", null], [2, "Line", null]], "hnote": "Its scope, crank, quiver and bolts go back into your pack as they are."}, "TwinStrikeScope": {"name": "Excalibur Tact-100 Illuminated Crossbow Scope", "desc": "A 1.5-5x crossbow scope with a reticle that lights red or green, marked every ten yards out to 100. Fits the TwinStrike TAC2.", "kit": "Excalibur TwinStrike TAC2", "parts": [["m/TwinStrikeScope__0.xm.gz", "t/ts_scope.jpg"]], "type": "Material", "stack": true, "equip": false, "weight": "0.45 kg (0.99 lbs)", "gear": "GEAR_TwinStrikeScope", "craft": [], "source": "Sold by the trader.", "harvest": [], "hnote": null}, "ChargerEXT": {"name": "Excalibur Charger EXT Crank Cocking Aid", "desc": "A quiet, removable crank that cocks the TwinStrike's two strings and lets them down again without a shot. Without it, the strings can't be cocked.", "kit": "Excalibur TwinStrike TAC2", "parts": [["m/ChargerEXT__0.xm.gz", "t/ts_crank.jpg"]], "type": "Material", "stack": true, "equip": false, "weight": "0.25 kg (0.55 lbs)", "gear": "GEAR_ChargerEXT", "craft": [], "source": "Sold by the trader.", "harvest": [[1, "Scrap Metal", null]], "hnote": null}, "ExcaliburQuiver": {"name": "Excalibur Rebolt Quiver", "desc": "A four-bolt quiver for the TwinStrike TAC2, hooded over the points. Holds Quill bolts only, and they weigh next to nothing in it. Fitted to the crossbow, it feeds the reload first.", "kit": "Excalibur TwinStrike TAC2", "parts": [["m/ExcaliburQuiver__0.xm.gz", "t/ts_quiver.jpg"], ["m/ExcaliburQuiver__1.xm.gz", "t/ts_quill.jpg"]], "type": "Tool", "stack": true, "equip": false, "weight": "0.14 kg (0.31 lbs)", "gear": "GEAR_ExcaliburQuiver", "craft": [], "source": "Sold by the trader.", "harvest": [[1, "Scrap Metal", null]], "hnote": "Any bolts in it go back into your pack first."}, "CrossbowMaintenanceKit": {"name": "Excalibur Crossbow Maintenance Utility Pack", "desc": "X-Slick rail lube, Ex-Wax and Ex-Oil, used to keep a TwinStrike TAC2 in good working order. Nothing else will repair it.", "kit": "Excalibur TwinStrike TAC2", "parts": [["m/CrossbowMaintenanceKit__0.xm.gz", "t/ts_kit.jpg"]], "type": "Tool", "stack": false, "equip": false, "weight": "0.15 kg (0.33 lbs)", "gear": "GEAR_CrossbowMaintenanceKit", "craft": [], "source": "Sold by the trader.", "harvest": [], "hnote": null}, "CrossbowBoltCarbon": {"name": "Excalibur Quill Bolt (Boltcutter 100)", "desc": "A carbon Quill bolt with a fixed three-blade Boltcutter 100 broadhead. The all-rounder, for wolves and deer. Harvest it to unscrew the point.", "kit": "Quill bolts", "parts": [["m/CrossbowBoltCarbon__0.xm.gz", "t/ts_quill.jpg"]], "type": "Other", "stack": true, "equip": false, "weight": "0.03 kg (0.06 lbs)", "gear": "GEAR_CrossbowBoltCarbon", "craft": [{"key": "CrossbowBoltCarbon", "title": "Excalibur Quill Bolt (Boltcutter 100)", "facility": "Anywhere", "tool": null, "fire": false, "time": "1 minute", "makes": 1, "needs": [[1, "Excalibur Quill Shaft", "QuillShaft"], [1, "Excalibur Boltcutter 100 Broadhead", "QuillPointStandard"]], "learn": ["Known from the start", null]}], "source": null, "harvest": [[1, "Excalibur Quill Shaft", "QuillShaft"], [1, "Excalibur Boltcutter 100 Broadhead", "QuillPointStandard"]], "hnote": null}, "QuillBoltHeavy": {"name": "Excalibur Quill Bolt (Boltcutter 150)", "desc": "A carbon Quill bolt with a heavier, all-steel Boltcutter 150 broadhead. Hits hardest, for bears, cougars and moose. Harvest it to unscrew the point.", "kit": "Quill bolts", "parts": [["m/QuillBoltHeavy__0.xm.gz", "t/ts_quill.jpg"]], "type": "Other", "stack": true, "equip": false, "weight": "0.03 kg (0.07 lbs)", "gear": "GEAR_QuillBoltHeavy", "craft": [{"key": "QuillBoltHeavy", "title": "Excalibur Quill Bolt (Boltcutter 150)", "facility": "Anywhere", "tool": null, "fire": false, "time": "1 minute", "makes": 1, "needs": [[1, "Excalibur Quill Shaft", "QuillShaft"], [1, "Excalibur Boltcutter 150 Broadhead", "QuillPointHeavy"]], "learn": ["Known from the start", null]}], "source": null, "harvest": [[1, "Excalibur Quill Shaft", "QuillShaft"], [1, "Excalibur Boltcutter 150 Broadhead", "QuillPointHeavy"]], "hnote": null}, "QuillBoltMechanical": {"name": "Excalibur Quill Bolt (Trailblazer 100)", "desc": "A carbon Quill bolt with a Trailblazer mechanical broadhead, its two blades opening on impact. Hits lighter, but deer and moose bleed out far sooner. Harvest it to unscrew the point.", "kit": "Quill bolts", "parts": [["m/QuillBoltMechanical__0.xm.gz", "t/ts_quill.jpg"]], "type": "Other", "stack": true, "equip": false, "weight": "0.03 kg (0.06 lbs)", "gear": "GEAR_QuillBoltMechanical", "craft": [{"key": "QuillBoltMechanical", "title": "Excalibur Quill Bolt (Trailblazer 100)", "facility": "Anywhere", "tool": null, "fire": false, "time": "1 minute", "makes": 1, "needs": [[1, "Excalibur Quill Shaft", "QuillShaft"], [1, "Excalibur Trailblazer 100 Broadhead", "QuillPointMechanical"]], "learn": ["Known from the start", null]}], "source": null, "harvest": [[1, "Excalibur Quill Shaft", "QuillShaft"], [1, "Excalibur Trailblazer 100 Broadhead", "QuillPointMechanical"]], "hnote": null}, "QuillBoltSmallGame": {"name": "Excalibur Quill Bolt (Zwickey Judo)", "desc": "A carbon Quill bolt with a Zwickey Judo point: a steel blunt with spring arms. Kills rabbits without spoiling the meat, and not much else. Harvest it to unscrew the point.", "kit": "Quill bolts", "parts": [["m/QuillBoltSmallGame__0.xm.gz", "t/ts_quill.jpg"]], "type": "Other", "stack": true, "equip": false, "weight": "0.03 kg (0.06 lbs)", "gear": "GEAR_QuillBoltSmallGame", "craft": [{"key": "QuillBoltSmallGame", "title": "Excalibur Quill Bolt (Zwickey Judo)", "facility": "Anywhere", "tool": null, "fire": false, "time": "1 minute", "makes": 1, "needs": [[1, "Excalibur Quill Shaft", "QuillShaft"], [1, "Zwickey Judo Point", "QuillPointSmallGame"]], "learn": ["Known from the start", null]}], "source": null, "harvest": [[1, "Excalibur Quill Shaft", "QuillShaft"], [1, "Zwickey Judo Point", "QuillPointSmallGame"]], "hnote": null}, "QuillShaft": {"name": "Excalibur Quill Shaft", "desc": "A carbon crossbow bolt with no point, its nock and vanes already fitted. Screw in a broadhead or a Judo point to make a usable bolt.", "kit": "Quill bolts", "parts": [["m/QuillShaft__0.xm.gz", "t/ts_quill.jpg"]], "type": "Other", "stack": true, "equip": false, "weight": "0.02 kg (0.05 lbs)", "gear": "GEAR_QuillShaft", "craft": [], "source": "From a box of Quill bolts, or by harvesting a Quill bolt.", "harvest": [], "hnote": null}, "CrossbowBoltBroken": {"name": "Broken Quill Bolt", "desc": "A snapped Quill bolt, its point lost in the target. Carbon can't be mended, but the fittings are worth a little Scrap Metal.", "kit": "Quill bolts", "parts": [["m/CrossbowBoltBroken__0.xm.gz", "t/ts_quill.jpg"]], "type": "Other", "stack": true, "equip": false, "weight": "0.03 kg (0.07 lbs)", "gear": "GEAR_CrossbowBoltBroken", "craft": [], "source": "Left behind when a Quill bolt breaks.", "harvest": [[1, "Scrap Metal", null]], "hnote": null}, "QuillPointStandard": {"name": "Excalibur Boltcutter 100 Broadhead", "desc": "A fixed three-blade broadhead for crossbow bolts. Balanced, for wolves and deer. Screw it into a Quill Shaft.", "kit": "Quill bolts", "parts": [["m/QuillPointStandard__0.xm.gz", "t/ts_quill.jpg"]], "type": "Other", "stack": true, "equip": false, "weight": "0.006 kg (0.01 lbs)", "gear": "GEAR_QuillPointStandard", "craft": [], "source": "From a case of six, or by harvesting a Quill bolt.", "harvest": [], "hnote": null}, "QuillPointHeavy": {"name": "Excalibur Boltcutter 150 Broadhead", "desc": "A heavier, all-steel Boltcutter. Hits hardest, for bears, cougars and moose. Screw it into a Quill Shaft.", "kit": "Quill bolts", "parts": [["m/QuillPointHeavy__0.xm.gz", "t/ts_quill.jpg"]], "type": "Other", "stack": true, "equip": false, "weight": "0.010 kg (0.02 lbs)", "gear": "GEAR_QuillPointHeavy", "craft": [], "source": "From a case of six, or by harvesting a Quill bolt.", "harvest": [], "hnote": null}, "QuillPointMechanical": {"name": "Excalibur Trailblazer 100 Broadhead", "desc": "A mechanical broadhead whose two blades open on impact, for a wide wound that bleeds heavily. Screw it into a Quill Shaft.", "kit": "Quill bolts", "parts": [["m/QuillPointMechanical__0.xm.gz", "t/ts_quill.jpg"]], "type": "Other", "stack": true, "equip": false, "weight": "0.006 kg (0.01 lbs)", "gear": "GEAR_QuillPointMechanical", "craft": [], "source": "From a case of six, or by harvesting a Quill bolt.", "harvest": [], "hnote": null}, "QuillPointSmallGame": {"name": "Zwickey Judo Point", "desc": "A steel blunt with four spring arms. Kills small game without spoiling the meat. Screw it into a Quill Shaft.", "kit": "Quill bolts", "parts": [["m/QuillPointSmallGame__0.xm.gz", "t/ts_quill.jpg"]], "type": "Other", "stack": true, "equip": false, "weight": "0.006 kg (0.01 lbs)", "gear": "GEAR_QuillPointSmallGame", "craft": [], "source": "From a case of six, or by harvesting a Quill bolt.", "harvest": [], "hnote": null}, "CrossbowBoltBox": {"name": "Excalibur Quill 16.5\" Carbon Bolts, 6-Pack", "desc": "A box of 6 carbon bolts for the TwinStrike TAC2. Points sold separately.", "kit": "Quill bolts", "parts": [["m/CrossbowBoltBox__0.xm.gz", "t/ts_qbox.jpg"]], "type": "Other", "stack": false, "equip": false, "weight": "0.19 kg (0.41 lbs)", "gear": "GEAR_CrossbowBoltBox", "craft": [], "source": "Sold by the trader.", "harvest": [[6, "Excalibur Quill Shaft", "QuillShaft"], [1, "Stack of Papers", null]], "hnote": "Opening it takes 15 seconds."}, "QuillPointBoxStandard": {"name": "Excalibur Boltcutter 100 Broadheads, 6-Pack", "desc": "A case of six Boltcutter 100 broadheads.", "kit": "Quill bolts", "parts": [["m/QuillPointBoxStandard__0.xm.gz", "t/ts_qbox.jpg"]], "type": "Other", "stack": false, "equip": false, "weight": "0.08 kg (0.17 lbs)", "gear": "GEAR_QuillPointBoxStandard", "craft": [], "source": "Sold by the trader.", "harvest": [[6, "Excalibur Boltcutter 100 Broadhead", "QuillPointStandard"]], "hnote": "Opening it takes 15 seconds."}, "QuillPointBoxHeavy": {"name": "Excalibur Boltcutter 150 Broadheads, 6-Pack", "desc": "A case of six Boltcutter 150 broadheads.", "kit": "Quill bolts", "parts": [["m/QuillPointBoxHeavy__0.xm.gz", "t/ts_qbox.jpg"]], "type": "Other", "stack": false, "equip": false, "weight": "0.10 kg (0.22 lbs)", "gear": "GEAR_QuillPointBoxHeavy", "craft": [], "source": "Sold by the trader.", "harvest": [[6, "Excalibur Boltcutter 150 Broadhead", "QuillPointHeavy"]], "hnote": "Opening it takes 15 seconds."}, "QuillPointBoxMechanical": {"name": "Excalibur Trailblazer 100 Broadheads, 6-Pack", "desc": "A case of six Trailblazer mechanical broadheads.", "kit": "Quill bolts", "parts": [["m/QuillPointBoxMechanical__0.xm.gz", "t/ts_qbox.jpg"]], "type": "Other", "stack": false, "equip": false, "weight": "0.08 kg (0.17 lbs)", "gear": "GEAR_QuillPointBoxMechanical", "craft": [], "source": "Sold by the trader.", "harvest": [[6, "Excalibur Trailblazer 100 Broadhead", "QuillPointMechanical"]], "hnote": "Opening it takes 15 seconds."}, "QuillPointBoxSmallGame": {"name": "Zwickey Judo Points, 6-Pack", "desc": "A case of six Judo points for small game.", "kit": "Quill bolts", "parts": [["m/QuillPointBoxSmallGame__0.xm.gz", "t/ts_qbox.jpg"]], "type": "Other", "stack": false, "equip": false, "weight": "0.08 kg (0.17 lbs)", "gear": "GEAR_QuillPointBoxSmallGame", "craft": [], "source": "Sold by the trader.", "harvest": [[6, "Zwickey Judo Point", "QuillPointSmallGame"]], "hnote": "Opening it takes 15 seconds."}}</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 <script>
 (function () {
   const ITEMS = JSON.parse(document.getElementById('gear-data').textContent);
-  const dlg = document.getElementById('viewer'), canvas = document.getElementById('stage'), status = document.getElementById('status');
+  const index = document.getElementById('index'), item = document.getElementById('item');
+  const media = document.getElementById('ib-media'), big = document.getElementById('big'), dlg = document.getElementById('viewer');
+  const status = document.getElementById('status');
+  const canvas = document.createElement('canvas');
+  media.prepend(canvas);
   let gl = null, current = null, raf = 0, token = 0;
+
+  function el(tag, cls, text) {
+    const n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text != null) n.textContent = text;
+    return n;
+  }
+
+  // an item's name, linked to its page when it is one of ours
+  function named([n, what, k], icon) {
+    const span = el('span', 'it');
+    if (k && icon) { const im = el('img'); im.src = 'i/' + k + '.png'; im.alt = ''; span.append(im); }
+    if (k) { const a = el('a', null, what); a.href = '#/' + k; span.append(a); } else span.append(el('span', null, what));
+    return span;
+  }
+
+  function table(rows) {
+    const t = el('table', 'mats'), head = el('tr');
+    head.append(el('th', null, 'Item'), el('th', null, 'Quantity'));
+    t.append(head);
+    rows.forEach(r => { const tr = el('tr'), a = el('td'), b = el('td', null, String(r[0])); a.append(named(r, true)); tr.append(a, b); t.append(tr); });
+    return t;
+  }
+
+  function recipe(r) {
+    const box = el('div', 'recipe');
+    const title = el('div', 'rc-title'), icon = el('img');
+    icon.src = 'i/' + r.key + '.png'; icon.alt = '';
+    title.append(icon, el('span', null, r.title));
+    box.append(title);
+    const top = el('div', 'rc-top');
+    const made = el('div'); made.append(el('small', null, 'Makes'), el('span', null, String(r.makes)));
+    const time = el('div'); time.append(el('small', null, 'Time'), el('span', null, r.time));
+    top.append(made, time);
+    box.append(top, el('h4', 'ib-head', 'Requirements'));
+    const row = (label, value) => { const d = el('div', 'ib-row'); d.append(el('b', null, label), el('span', null, value)); box.append(d); };
+    row('Facility', r.facility);
+    if (r.tool) row('Tool', r.tool);
+    if (r.fire) row('Fire', 'A lit fire in the Forge');
+    box.append(el('h4', 'ib-head', 'Materials'), table(r.needs));
+    const learn = el('div', 'rc-learn', r.learn[0]);
+    if (r.learn[1]) { const a = el('a', null, ITEMS[r.learn[1]].name); a.href = '#/' + r.learn[1]; learn.append(a); }
+    box.append(learn);
+    return box;
+  }
+
+  function article(k) {
+    const it = ITEMS[k];
+    document.getElementById('a-kit').textContent = it.kit;
+    document.getElementById('a-name').textContent = it.name;
+    document.getElementById('ib-name').textContent = it.name;
+    document.getElementById('a-desc').textContent = it.desc;
+    document.getElementById('ib-type').textContent = it.type;
+    document.getElementById('ib-equip').textContent = it.equip ? 'Yes' : 'No';
+    document.getElementById('ib-stack').textContent = it.stack ? 'Yes' : 'No';
+    document.getElementById('ib-weight').textContent = it.weight;
+    document.getElementById('ib-gear').textContent = it.gear;
+    const hv = document.getElementById('ib-harvest');
+    hv.replaceChildren();
+    if (it.harvest.length) {
+      const ul = el('ul', 'ib-list');
+      it.harvest.forEach(r => { const li = el('li', null, r[0] + ' \u00d7 '); li.append(named(r, false)); ul.append(li); });
+      hv.append(ul);
+    } else hv.textContent = 'None';
+    const secs = document.getElementById('a-sections');
+    secs.replaceChildren();
+    if (it.craft.length) {
+      secs.append(el('h2', 'sec', 'Crafting'));
+      const wrap = el('div', 'recipes');
+      it.craft.forEach(r => wrap.append(recipe(r)));
+      secs.append(wrap);
+    }
+    if (it.source) { secs.append(el('h2', 'sec', 'Acquisition'), el('p', null, it.source)); }
+    secs.append(el('h2', 'sec', 'Harvesting'));
+    if (it.harvest.length) { const h = el('div', 'harvest'); h.append(table(it.harvest)); secs.append(h); }
+    else secs.append(el('p', null, 'It cannot be harvested.'));
+    if (it.hnote) secs.append(el('p', 'note', it.hnote));
+    document.querySelectorAll('.nb-list a').forEach(a => { if (a.dataset.k === k) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
+    document.title = it.name + ' | Weaponry Expansion Wiki';
+  }
 
   function setup() {
     if (gl) return gl;
@@ -391,6 +569,7 @@ dialog::backdrop { background: rgb(6 8 10 / .78); }
   }
 
   function size() {
+    if (!gl) return;
     const r = canvas.parentElement.getBoundingClientRect();
     gl.renderer.setSize(Math.max(1, r.width), Math.max(1, r.height), false);
     gl.camera.aspect = Math.max(1, r.width) / Math.max(1, r.height); gl.camera.updateProjectionMatrix();
@@ -408,17 +587,14 @@ dialog::backdrop { background: rgb(6 8 10 / .78); }
   }
 
   function loop() { raf = requestAnimationFrame(loop); gl.controls.update(); gl.renderer.render(gl.scene, gl.camera); }
+  function stop() { cancelAnimationFrame(raf); raf = 0; }
 
-  async function open(k) {
+  async function show(k) {
     const it = ITEMS[k], my = ++token;
-    document.getElementById('v-name').textContent = it.name;
-    document.getElementById('v-desc').textContent = it.desc;
-    const icon = document.getElementById('v-icon'); icon.src = 'i/' + k + '.png'; icon.alt = it.name + ': inventory icon';
-    if (!dlg.open) dlg.showModal();
     status.textContent = 'Loading the model\u2026'; status.hidden = false;
     try {
       setup(); clear(); size();
-      cancelAnimationFrame(raf); loop();
+      stop(); loop();
       const group = new THREE.Group();
       const parts = await Promise.all(it.parts.map(async ([m, t]) => {
         const [g, tex] = await Promise.all([mesh(m), map(t)]);
@@ -433,12 +609,37 @@ dialog::backdrop { background: rgb(6 8 10 / .78); }
     }
   }
 
-  function close() { cancelAnimationFrame(raf); raf = 0; if (dlg.open) dlg.close(); }
-  document.querySelectorAll('.item').forEach(b => b.addEventListener('click', () => open(b.dataset.k)));
-  document.getElementById('v-close').addEventListener('click', close);
-  dlg.addEventListener('click', e => { if (e.target === dlg) close(); });
-  dlg.addEventListener('close', () => { cancelAnimationFrame(raf); raf = 0; });
-  window.addEventListener('resize', () => { if (gl && dlg.open) size(); });
+  // the larger view: the same canvas moves into the dialog and back
+  function enlarge() { big.prepend(canvas); dlg.showModal(); size(); }
+  function shrink() { if (dlg.open) dlg.close(); }
+  document.getElementById('expand').addEventListener('click', enlarge);
+  document.getElementById('v-close').addEventListener('click', shrink);
+  dlg.addEventListener('click', e => { if (e.target === dlg) shrink(); });
+  dlg.addEventListener('close', () => { media.prepend(canvas); size(); });
+  window.addEventListener('resize', size);
+
+  // the wiki's pages: #/<item> is an item's page, anything else the gear index (and its kit anchors)
+  function route() {
+    const m = location.hash.match(/^#\/(\w+)$/);
+    if (m && ITEMS[m[1]]) {
+      if (dlg.open) dlg.close();
+      index.hidden = true; item.hidden = false;
+      article(m[1]);
+      window.scrollTo(0, 0);
+      document.getElementById('a-name').focus({ preventScroll: true });
+      show(m[1]);
+      return;
+    }
+    token++; stop();
+    if (dlg.open) dlg.close();
+    item.hidden = true; index.hidden = false;
+    document.title = 'Weaponry Expansion Wiki';
+    const anchor = location.hash.length > 1 && document.getElementById(location.hash.slice(1));
+    if (anchor && anchor.classList.contains('kit')) anchor.scrollIntoView();
+    else window.scrollTo(0, 0);
+  }
+  window.addEventListener('hashchange', route);
+  route();
 })();
 </script>
 </body>
