@@ -1,0 +1,445 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta charset="utf-8">
+<title>Weaponry Expansion Gear</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Literata:opsz,wght@7..72,400;7..72,500&display=swap">
+<style>
+/* Layout: a gear manifest. Kits as sections; each item a catalogue plate (world model) with its inventory slot in the
+   corner and its in-game name on a slate bar; a click opens it in 3D beside its description.
+   One dark look by choice: the game's own slate panels and amber. */
+:root {
+  --bg: #11151a;
+  --panel: #1a1f25;
+  --line: #2b323a;
+  --fg: #e8e4da;
+  --muted: #9ba3ab;
+  --accent: #e3a646;
+  --slot: #0c0f12;
+  --stage-hi: #3a434d;
+  --stage-lo: #171b20;
+  --display: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
+  --body: "Literata", Georgia, "Times New Roman", serif;
+  --mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  color-scheme: dark;
+}
+[hidden] { display: none !important; }
+html { background: var(--bg); }
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 16px; line-height: 1.55; }
+img { max-width: 100%; }
+.wrap { max-width: 1240px; margin: 0 auto; padding-block: 40px 72px;
+        padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+        display: flex; flex-direction: column; gap: 52px; }
+.top { display: flex; flex-direction: column; gap: 12px; }
+.eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+h1 { font-family: var(--display); font-weight: 700; font-size: clamp(40px, 7vw, 72px); line-height: .95; letter-spacing: .01em;
+     text-transform: uppercase; margin: 0; text-wrap: balance; }
+section { display: flex; flex-direction: column; gap: 22px; }
+.kit { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; border-bottom: 1px solid var(--line); padding-bottom: 12px; }
+.kit h2 { font-family: var(--display); font-weight: 700; font-size: clamp(28px, 4vw, 38px); letter-spacing: .02em; text-transform: uppercase;
+          margin: 0; text-wrap: balance; }
+.kit .count { font-family: var(--mono); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--accent); }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: 20px; }
+.item { appearance: none; font: inherit; color: inherit; text-align: left; cursor: pointer; padding: 0; background: var(--panel);
+        border: 1px solid var(--line); border-radius: 4px; overflow: hidden; min-width: 0; display: flex; flex-direction: column;
+        transition: border-color .15s, transform .15s; }
+.item:hover { border-color: var(--accent); }
+.item:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: no-preference) { .item:hover { transform: translateY(-2px); } }
+.plate { position: relative; display: block; }
+.plate > img { display: block; width: 100%; height: auto; aspect-ratio: 4 / 3; }
+.slot { position: absolute; right: 10px; bottom: 10px; width: 88px; height: 88px; background: var(--slot); border: 1px solid var(--line);
+        border-radius: 3px; display: grid; place-items: center; box-shadow: 0 2px 10px rgb(0 0 0 / .35); }
+.slot img { width: 80px; height: 80px; }
+.label { display: block; font-family: var(--display); font-weight: 600; font-size: 22px; line-height: 1.15; letter-spacing: .04em;
+         text-transform: uppercase; color: var(--accent); padding: 11px 14px 13px; border-top: 1px solid var(--line); text-wrap: balance; }
+/* the viewer */
+dialog { padding: 0; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); color: var(--fg);
+         width: min(1180px, calc(100vw - 32px)); height: min(760px, calc(100dvh - 32px)); max-width: none; max-height: none; overflow: hidden; }
+dialog::backdrop { background: rgb(6 8 10 / .78); }
+.v { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); height: 100%; }
+.stage { position: relative; min-height: 0; background: radial-gradient(ellipse at 50% 42%, var(--stage-hi), var(--stage-lo) 72%); }
+.stage canvas { display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; }
+.stage canvas:active { cursor: grabbing; }
+.status { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--mono); font-size: 13px; color: var(--muted);
+          pointer-events: none; text-align: center; padding: 16px; }
+.hint { position: absolute; left: 14px; bottom: 12px; font-family: var(--mono); font-size: 11.5px; color: var(--muted); pointer-events: none; }
+.info { border-left: 1px solid var(--line); padding: 26px 24px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.info .slot-lg { width: 112px; height: 112px; background: var(--slot); border: 1px solid var(--line); border-radius: 3px; display: grid; place-items: center; }
+.info .slot-lg img { width: 102px; height: 102px; }
+.info h2 { font-family: var(--display); font-weight: 700; font-size: 34px; line-height: 1.05; letter-spacing: .02em; text-transform: uppercase;
+           color: var(--accent); margin: 0; text-wrap: balance; }
+.info p { margin: 0; max-width: 60ch; }
+.close { position: absolute; top: 10px; right: 10px; width: 40px; height: 40px; border-radius: 4px; border: 1px solid var(--line);
+         background: rgb(17 21 26 / .85); color: var(--fg); font: 600 22px/1 var(--display); cursor: pointer; }
+.close:hover, .close:focus-visible { border-color: var(--accent); color: var(--accent); outline: none; }
+@media (max-width: 760px) {
+  dialog { height: calc(100dvh - 24px); width: calc(100vw - 24px); }
+  .v { grid-template-columns: minmax(0, 1fr); grid-template-rows: 56% 44%; }
+  .info { border-left: none; border-top: 1px solid var(--line); padding: 18px 16px; }
+  .info .slot-lg { width: 72px; height: 72px; } .info .slot-lg img { width: 64px; height: 64px; }
+  .info h2 { font-size: 26px; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="eyebrow">The Long Dark &middot; Weaponry Expansion &middot; 40 items</div>
+    <h1>Weaponry Expansion Gear</h1>
+  </div>
+<section id="medieval">
+  <header class="kit"><h2>Medieval crossbow</h2><span class="count">13 items</span></header>
+  <div class="grid">
+<button class="item" type="button" data-k="Crossbow" aria-label="Medieval Crossbow: open in 3D">
+  <span class="plate"><img src="w/Crossbow.jpg" width="960" height="720" alt="">
+    <span class="slot"><img src="i/Crossbow.png" width="256" height="256" alt=""></span></span>
+  <span class="label">Medieval Crossbow</span>
+</button>
+<button class="item" type="button" data-k="MedievalTiller" aria-label="Crossbow Stock: open in 3D">
+  <span class="plate"><img src="w/MedievalTiller.jpg" width="960" height="720" alt="">
+    <span class="slot"><img src="i/MedievalTiller.png" width="256" height="256" alt=""></span></span>
+  <span class="label">Crossbow Stock</span>
+</button>
+<button class="item" type="button" data-k="MedievalLock" aria-label="Crossbow Lock: open in 3D">
+  <span class="plate"><img src="w/MedievalLock.jpg" width="960" height="720" alt="">
+    <span class="slot"><img src="i/MedievalLock.png" width="256" height="256" alt=""></span></span>
+  <span class="label">Crossbow Lock</span>
+</button>
+<button class="item" type="button" data-k="MedievalBow" aria-label="Steel Crossbow Bow: open in 3D">
+  <span class="plate"><img src="w/MedievalBow.jpg" width="960" height="720" alt="">
+    <span class="slot"><img src="i/MedievalBow.png" width="256" height="256" alt=""></span></span>
+  <span class="label">Steel Crossbow Bow</span>
+</button>
+<button class="item" type="button" data-k="MedievalStirrup" aria-label="Stirrup and Bow-irons: open in 3D">
+  <span class="plate"><img src="w/MedievalStirrup.jpg" width="960" height="720" alt="">
+    <span class="slot"><img src="i/MedievalStirrup.png" width="256" height="256" alt=""></span></span>
+  <span class="label">Stirrup and Bow-irons</span>
+</button>
+<button class="item" type="button" data-k="MedievalString" aria-label="Crossbow String: open in 3D">
+  <span class="plate"><img src="w/MedievalString.jpg" width="960" height="720" alt="">
+    <span class="slot"><img src="i/MedievalString.png" width="256" height="256" alt=""></span></span>
+  <span class="label">Crossbow String</span>
+</button>
+<button class="item" type="button" data-k="MedievalLever" aria-label="Goat&#x27;s-foot Lever: open in 3D">
+  <span class="plate"><img src="w/MedievalLever.jpg" width="960" height="720" alt="">
+    <span class="slot"><img src="i/MedievalLever.png" width="256" height="256" alt=""></span></span>
+  <span class="label">Goat&#x27;s-foot Lever</span>
+</button>
+<button class="item" type="button" data-k="MedievalPlan1" aria-label="Manuscript Plan I: The Stock: open in 3D">
+  <span class="plate"><img src="w/MedievalPlan1.jpg" width="960" height="720" alt="">
+    <span class="slot"><img src="i/MedievalPlan1.png" width="256" height="256" alt=""></span></span>
+  <span class="label">Manuscript Plan I: The Stock</span>
+</button>
+<button class="item" type="button" data-k="MedievalPlan2" aria-label="Manuscript Plan II: The Nut and the Lock: open in 3D">
+  <span class="plate"><img src="w/MedievalPlan2.jpg" width="960" height="720" alt="">
+    <span class="slot"><img src="i/MedievalPlan2.png" width="256" height="256" alt=""></span></span>
+  <span class="label">Manuscript Plan II: The Nut and the Lock</span>
+</button>
+<button class="item" type="button" data-k="MedievalPlan3" aria-label="Manuscript Plan III: The Steel Bow: open in 3D">
+  <span class="plate"><img src="w/MedievalPlan3.jpg" width="960" height="720" alt="">
+    <span class="slot"><img src="i/MedievalPlan3.png" width="256" height="256" alt=""></span></span>
+  <span class="label">Manuscript Plan III: The Steel Bow</span>
+</button>
+<button class="item" type="button" data-k="MedievalPlan4" aria-label="Manuscript Plan IV: The Stirrup and Bow-irons: open in 3D">
+  <span class="plate"><img src="w/MedievalPlan4.jpg" width="960" height="720" alt="">
+    <span class="slot"><img src="i/MedievalPlan4.png" width="256" height="256" alt=""></span></span>
+  <span class="label">Manuscript Plan IV: The Stirrup and Bow-irons</span>
+</button>
+<button class="item" type="button" data-k="MedievalPlan5" aria-label="Manuscript Plan V: The String: open in 3D">
+  <span class="plate"><img src="w/MedievalPlan5.jpg" width="960" height="720" alt="">
+    <span class="slot"><img src="i/MedievalPlan5.png" width="256" height="256" alt=""></span></span>
+  <span class="label">Manuscript Plan V: The String</span>
+</button>
+<button class="item" type="button" data-k="MedievalPlan6" aria-label="Manuscript Plan VI: The Goat&#x27;s-foot Lever: open in 3D">
+  <span class="plate"><img src="w/MedievalPlan6.jpg" width="960" height="720" alt="">
+    <span class="slot"><img src="i/MedievalPlan6.png" width="256" height="256" alt=""></span></span>
+  <span class="label">Manuscript Plan VI: The Goat&#x27;s-foot Lever</span>
+</button>
+  </div>
+</section>
+<section id="handmade">
+  <header class="kit"><h2>Handmade bolts, quiver and book</h2><span class="count">7 items</span></header>
+  <div class="grid">
+<button class="item" type="button" data-k="CrossbowBoltCrafted" aria-label="Standard Hunting Bolt: open in 3D">
+  <span class="plate"><img src="w/CrossbowBoltCrafted.jpg" width="960" height="720" alt="">
+    <span class="slot"><img src="i/CrossbowBoltCrafted.png" width="256" height="256" alt=""></span></span>
+  <span class="label">Standard Hunting Bolt</span>
+</button>
+<button class="item" type="button" data-k="CrossbowBoltHeavy" aria-label="Heavy Hunting Bolt: open in 3D">
+  <span class="plate"><img src="w/CrossbowBoltHeavy.jpg" width="960" height="720" alt="">
+    <span class="slot"><img src="i/CrossbowBoltHeavy.png" width="256" height="256" alt=""></span></span>
+  <span class="label">Heavy Hunting Bolt</span>
+</button>
+<button class="item" type="button" data-k="CrossbowBoltBarbed" aria-label="Barbed Bolt: open in 3D">
+  <span class="plate"><img src="w/CrossbowBoltBarbed.jpg" width="960" height="720" alt="">
+    <span class="slot"><img src="i/CrossbowBoltBarbed.png" width="256" height="256" alt=""></span></span>
+  <span class="label">Barbed Bolt</span>
+</button>
+<button class="item" type="button" data-k="CrossbowBoltCraftedBroken" aria-label="Broken Handmade Bolt: open in 3D">
+  <span class="plate"><img src="w/CrossbowBoltCraftedBroken.jpg" width="960" height="720" alt="">
+    <span class="slot"><img src="i/CrossbowBoltCraftedBroken.png" width="256" height="256" alt=""></span></span>
+  <span class="label">Broken Handmade Bolt</span>
+</button>
+<button class="item" type="button" data-k="CrossbowBoltCraftedShattered" aria-label="Splintered Handmade Bolt: open in 3D">
+  <span class="plate"><img src="w/CrossbowBoltCraftedShattered.jpg" width="960" height="720" alt="">
+    <span class="slot"><img src="i/CrossbowBoltCraftedShattered.png" width="256" height="256" alt=""></span></span>
+  <span class="label">Splintered Handmade Bolt</span>
+</button>
+<button class="item" type="button" data-k="CrossbowQuiver" aria-label="Leather Bolt Quiver: open in 3D">
+  <span class="plate"><img src="w/CrossbowQuiver.jpg" width="960" height="720" alt="">
+    <span class="slot"><img src="i/CrossbowQuiver.png" width="256" height="256" alt=""></span></span>
+  <span class="label">Leather Bolt Quiver</span>
+</button>
+<button class="item" type="button" data-k="CrossbowBook" aria-label="The Crossbow: open in 3D">
+  <span class="plate"><img src="w/CrossbowBook.jpg" width="960" height="720" alt="">
+    <span class="slot"><img src="i/CrossbowBook.png" width="256" height="256" alt=""></span></span>
+  <span class="label">The Crossbow</span>
+</button>
+  </div>
+</section>
+<section id="twinstrike">
+  <header class="kit"><h2>Excalibur TwinStrike</h2><span class="count">5 items</span></header>
+  <div class="grid">
+<button class="item" type="button" data-k="TwinStrike" aria-label="TwinStrike Crossbow: open in 3D">
+  <span class="plate"><img src="w/TwinStrike.jpg" width="960" height="720" alt="">
+    <span class="slot"><img src="i/TwinStrike.png" width="256" height="256" alt=""></span></span>
+  <span class="label">TwinStrike Crossbow</span>
+</button>
+<button class="item" type="button" data-k="TwinStrikeScope" aria-label="Tact-100 Scope: open in 3D">
+  <span class="plate"><img src="w/TwinStrikeScope.jpg" width="960" height="720" alt="">
+    <span class="slot"><img src="i/TwinStrikeScope.png" width="256" height="256" alt=""></span></span>
+  <span class="label">Tact-100 Scope</span>
+</button>
+<button class="item" type="button" data-k="ChargerEXT" aria-label="Charger EXT: open in 3D">
+  <span class="plate"><img src="w/ChargerEXT.jpg" width="960" height="720" alt="">
+    <span class="slot"><img src="i/ChargerEXT.png" width="256" height="256" alt=""></span></span>
+  <span class="label">Charger EXT</span>
+</button>
+<button class="item" type="button" data-k="ExcaliburQuiver" aria-label="Excalibur Quiver: open in 3D">
+  <span class="plate"><img src="w/ExcaliburQuiver.jpg" width="960" height="720" alt="">
+    <span class="slot"><img src="i/ExcaliburQuiver.png" width="256" height="256" alt=""></span></span>
+  <span class="label">Excalibur Quiver</span>
+</button>
+<button class="item" type="button" data-k="CrossbowMaintenanceKit" aria-label="Crossbow Maintenance Kit: open in 3D">
+  <span class="plate"><img src="w/CrossbowMaintenanceKit.jpg" width="960" height="720" alt="">
+    <span class="slot"><img src="i/CrossbowMaintenanceKit.png" width="256" height="256" alt=""></span></span>
+  <span class="label">Crossbow Maintenance Kit</span>
+</button>
+  </div>
+</section>
+<section id="quill">
+  <header class="kit"><h2>Quill bolts</h2><span class="count">15 items</span></header>
+  <div class="grid">
+<button class="item" type="button" data-k="CrossbowBoltCarbon" aria-label="Standard Broadhead Quill Bolt: open in 3D">
+  <span class="plate"><img src="w/CrossbowBoltCarbon.jpg" width="960" height="720" alt="">
+    <span class="slot"><img src="i/CrossbowBoltCarbon.png" width="256" height="256" alt=""></span></span>
+  <span class="label">Standard Broadhead Quill Bolt</span>
+</button>
+<button class="item" type="button" data-k="QuillBoltHeavy" aria-label="Heavy Broadhead Quill Bolt: open in 3D">
+  <span class="plate"><img src="w/QuillBoltHeavy.jpg" width="960" height="720" alt="">
+    <span class="slot"><img src="i/QuillBoltHeavy.png" width="256" height="256" alt=""></span></span>
+  <span class="label">Heavy Broadhead Quill Bolt</span>
+</button>
+<button class="item" type="button" data-k="QuillBoltMechanical" aria-label="Mechanical Broadhead Quill Bolt: open in 3D">
+  <span class="plate"><img src="w/QuillBoltMechanical.jpg" width="960" height="720" alt="">
+    <span class="slot"><img src="i/QuillBoltMechanical.png" width="256" height="256" alt=""></span></span>
+  <span class="label">Mechanical Broadhead Quill Bolt</span>
+</button>
+<button class="item" type="button" data-k="QuillBoltSmallGame" aria-label="Small-Game Quill Bolt: open in 3D">
+  <span class="plate"><img src="w/QuillBoltSmallGame.jpg" width="960" height="720" alt="">
+    <span class="slot"><img src="i/QuillBoltSmallGame.png" width="256" height="256" alt=""></span></span>
+  <span class="label">Small-Game Quill Bolt</span>
+</button>
+<button class="item" type="button" data-k="QuillShaft" aria-label="Quill Shaft: open in 3D">
+  <span class="plate"><img src="w/QuillShaft.jpg" width="960" height="720" alt="">
+    <span class="slot"><img src="i/QuillShaft.png" width="256" height="256" alt=""></span></span>
+  <span class="label">Quill Shaft</span>
+</button>
+<button class="item" type="button" data-k="CrossbowBoltBroken" aria-label="Broken Quill Bolt: open in 3D">
+  <span class="plate"><img src="w/CrossbowBoltBroken.jpg" width="960" height="720" alt="">
+    <span class="slot"><img src="i/CrossbowBoltBroken.png" width="256" height="256" alt=""></span></span>
+  <span class="label">Broken Quill Bolt</span>
+</button>
+<button class="item" type="button" data-k="QuillPointStandard" aria-label="Boltcutter 100 Broadhead: open in 3D">
+  <span class="plate"><img src="w/QuillPointStandard.jpg" width="960" height="720" alt="">
+    <span class="slot"><img src="i/QuillPointStandard.png" width="256" height="256" alt=""></span></span>
+  <span class="label">Boltcutter 100 Broadhead</span>
+</button>
+<button class="item" type="button" data-k="QuillPointHeavy" aria-label="Boltcutter 150 Broadhead: open in 3D">
+  <span class="plate"><img src="w/QuillPointHeavy.jpg" width="960" height="720" alt="">
+    <span class="slot"><img src="i/QuillPointHeavy.png" width="256" height="256" alt=""></span></span>
+  <span class="label">Boltcutter 150 Broadhead</span>
+</button>
+<button class="item" type="button" data-k="QuillPointMechanical" aria-label="Trailblazer Mechanical Broadhead: open in 3D">
+  <span class="plate"><img src="w/QuillPointMechanical.jpg" width="960" height="720" alt="">
+    <span class="slot"><img src="i/QuillPointMechanical.png" width="256" height="256" alt=""></span></span>
+  <span class="label">Trailblazer Mechanical Broadhead</span>
+</button>
+<button class="item" type="button" data-k="QuillPointSmallGame" aria-label="Judo Small-Game Point: open in 3D">
+  <span class="plate"><img src="w/QuillPointSmallGame.jpg" width="960" height="720" alt="">
+    <span class="slot"><img src="i/QuillPointSmallGame.png" width="256" height="256" alt=""></span></span>
+  <span class="label">Judo Small-Game Point</span>
+</button>
+<button class="item" type="button" data-k="CrossbowBoltBox" aria-label="Box of Quill Shafts: open in 3D">
+  <span class="plate"><img src="w/CrossbowBoltBox.jpg" width="960" height="720" alt="">
+    <span class="slot"><img src="i/CrossbowBoltBox.png" width="256" height="256" alt=""></span></span>
+  <span class="label">Box of Quill Shafts</span>
+</button>
+<button class="item" type="button" data-k="QuillPointBoxStandard" aria-label="Case of Boltcutter 100 Broadheads: open in 3D">
+  <span class="plate"><img src="w/QuillPointBoxStandard.jpg" width="960" height="720" alt="">
+    <span class="slot"><img src="i/QuillPointBoxStandard.png" width="256" height="256" alt=""></span></span>
+  <span class="label">Case of Boltcutter 100 Broadheads</span>
+</button>
+<button class="item" type="button" data-k="QuillPointBoxHeavy" aria-label="Case of Boltcutter 150 Broadheads: open in 3D">
+  <span class="plate"><img src="w/QuillPointBoxHeavy.jpg" width="960" height="720" alt="">
+    <span class="slot"><img src="i/QuillPointBoxHeavy.png" width="256" height="256" alt=""></span></span>
+  <span class="label">Case of Boltcutter 150 Broadheads</span>
+</button>
+<button class="item" type="button" data-k="QuillPointBoxMechanical" aria-label="Case of Trailblazer Broadheads: open in 3D">
+  <span class="plate"><img src="w/QuillPointBoxMechanical.jpg" width="960" height="720" alt="">
+    <span class="slot"><img src="i/QuillPointBoxMechanical.png" width="256" height="256" alt=""></span></span>
+  <span class="label">Case of Trailblazer Broadheads</span>
+</button>
+<button class="item" type="button" data-k="QuillPointBoxSmallGame" aria-label="Case of Judo Points: open in 3D">
+  <span class="plate"><img src="w/QuillPointBoxSmallGame.jpg" width="960" height="720" alt="">
+    <span class="slot"><img src="i/QuillPointBoxSmallGame.png" width="256" height="256" alt=""></span></span>
+  <span class="label">Case of Judo Points</span>
+</button>
+  </div>
+</section>
+</div>
+<dialog id="viewer" aria-labelledby="v-name">
+  <div class="v">
+    <div class="stage"><canvas id="stage"></canvas><div class="status" id="status">Loading&hellip;</div>
+      <div class="hint">Drag to turn &middot; scroll or pinch to zoom &middot; right-drag to move</div></div>
+    <div class="info"><div class="slot-lg"><img id="v-icon" alt=""></div><h2 id="v-name"></h2><p id="v-desc"></p></div>
+  </div>
+  <button class="close" id="v-close" type="button" aria-label="Close">&times;</button>
+</dialog>
+<script type="application/json" id="gear-data">{"Crossbow": {"name": "Medieval Crossbow", "desc": "A fifteenth-century hunting crossbow built from an old treatise's plans: a steel bow of some 500 lb strapped into a beech stock with bow-irons and wedges, a revolving nut and a long trigger. Spanned by hand with its goat's-foot lever, which clips under the fore-end. Slow to span, but it drives a heavy bolt deep. Its six components wear on their own and are mended one by one.", "parts": [["m/Crossbow__0.xm.gz", "t/medieval_bow.jpg"], ["m/Crossbow__1.xm.gz", "t/medieval_lever.jpg"], ["m/Crossbow__2.xm.gz", "t/medieval_lock.jpg"], ["m/Crossbow__3.xm.gz", "t/medieval_stirrup.jpg"], ["m/Crossbow__4.xm.gz", "t/medieval_string.jpg"], ["m/Crossbow__5.xm.gz", "t/medieval_tiller.jpg"]]}, "MedievalTiller": {"name": "Crossbow Stock", "desc": "The beech stock of a medieval crossbow with its sight strip, iron cap and brass bolt groove, and the clips that hold its lever. One of the six parts of the crossbow, assembled at a workbench.", "parts": [["m/MedievalTiller__0.xm.gz", "t/medieval_tiller.jpg"]]}, "MedievalLock": {"name": "Crossbow Lock", "desc": "The revolving steel nut in its socket, the pierced lock plates, the long trigger and its plate, the pins, and the pin the lever bears on. One of the six parts of the medieval crossbow.", "parts": [["m/MedievalLock__0.xm.gz", "t/medieval_lock.jpg"]]}, "MedievalBow": {"name": "Steel Crossbow Bow", "desc": "A bow of spring steel, two and a half feet between its ends, flat with squared edges, tempered to bend without breaking: it draws some 500 lb. One of the six parts of the medieval crossbow.", "parts": [["m/MedievalBow__0.xm.gz", "t/medieval_bow.jpg"]]}, "MedievalStirrup": {"name": "Stirrup and Bow-irons", "desc": "The iron stirrup the foot holds the crossbow down by, the two bow-irons that strap the bow to the stock, and the guards and wedges that draw them tight. One of the six parts of the medieval crossbow.", "parts": [["m/MedievalStirrup__0.xm.gz", "t/medieval_stirrup.jpg"]]}, "MedievalString": {"name": "Crossbow String", "desc": "A heavy bow-string of twisted, waxed gut, its loops and centre wrapped. One of the six parts of the medieval crossbow.", "parts": [["m/MedievalString__0.xm.gz", "t/medieval_string.jpg"]]}, "MedievalLever": {"name": "Goat's-foot Lever", "desc": "A forked iron lever with a hinged handle and a claw-frame, to draw the crossbow's string onto the nut by hand. One of the six parts of the medieval crossbow; on it, the lever clips under the fore-end.", "parts": [["m/MedievalLever__0.xm.gz", "t/medieval_lever.jpg"]]}, "MedievalPlan1": {"name": "Manuscript Plan I: The Stock", "desc": "A sheet in the blacksmith's own hand, folded in four: the beech stock of his crossbow, with its sight, its iron cap and the groove for the bolt, drawn, measured and noted, with forge soot on it. Taking it teaches you to make the stock at a workbench. Hang it on a wall or keep it; once learned, it can be harvested for paper. At the foot, in red pencil: \u201cThe lock I filed out at the round-roofed garage on the coast road. Next sheet is on the desk there.\u201d", "parts": [["m/MedievalPlan1__0.xm.gz", "t/plan_1.jpg"]]}, "MedievalPlan2": {"name": "Manuscript Plan II: The Nut and the Lock", "desc": "A sheet in the blacksmith's own hand, folded in four: the lock: the revolving nut that holds the string, its socket, the lock plates, the trigger and the pins, drawn, measured and noted, with forge soot on it. Taking it teaches you to forge the lock. Hang it on a wall or keep it; once learned, it can be harvested for paper. At the foot, in red pencil: \u201cThe bow I tempered at the lighthouse out on the point. Look on the table.\u201d", "parts": [["m/MedievalPlan2__0.xm.gz", "t/plan_2.jpg"]]}, "MedievalPlan3": {"name": "Manuscript Plan III: The Steel Bow", "desc": "A sheet in the blacksmith's own hand, folded in four: the bow of spring steel, two and a half feet between its ends, drawn, measured and noted, with forge soot on it. Taking it teaches you to forge the bow. Hang it on a wall or keep it; once learned, it can be harvested for paper. At the foot, in red pencil: \u201cIrons and stirrup came out of the railway's yard, up the broken line. The office desk.\u201d", "parts": [["m/MedievalPlan3__0.xm.gz", "t/plan_3.jpg"]]}, "MedievalPlan4": {"name": "Manuscript Plan IV: The Stirrup and Bow-irons", "desc": "A sheet in the blacksmith's own hand, folded in four: the iron stirrup and the two bow-irons that hold the bow to the stock, with their guards and wedges, drawn, measured and noted, with forge soot on it. Taking it teaches you to forge them. Hang it on a wall or keep it; once learned, it can be harvested for paper. At the foot, in red pencil: \u201cThe string I twisted at the farmhouse in the valley. Upstairs.\u201d", "parts": [["m/MedievalPlan4__0.xm.gz", "t/plan_4.jpg"]]}, "MedievalPlan5": {"name": "Manuscript Plan V: The String", "desc": "A sheet in the blacksmith's own hand, folded in four: the bow-string of twisted, waxed gut, its loops and middle whipped, drawn, measured and noted, with forge soot on it. Taking it teaches you to make the string at a workbench. Hang it on a wall or keep it; once learned, it can be harvested for paper. At the foot, in red pencil: \u201cThe lever's sheet I left in Milton, at the credit union. On the desk.\u201d", "parts": [["m/MedievalPlan5__0.xm.gz", "t/plan_5.jpg"]]}, "MedievalPlan6": {"name": "Manuscript Plan VI: The Goat's-foot Lever", "desc": "A sheet in the blacksmith's own hand, folded in four: the goat's-foot lever that spans the crossbow by hand: its fork, its hinged handle and its claws, drawn, measured and noted, with forge soot on it. Taking it teaches you to forge the lever. Hang it on a wall or keep it; once learned, it can be harvested for paper. At the foot, in red pencil: \u201cThat's all six. Put it together at a bench and drive the wedges home. Good hunting.\u201d", "parts": [["m/MedievalPlan6__0.xm.gz", "t/plan_6.jpg"]]}, "CrossbowBoltCrafted": {"name": "Standard Hunting Bolt", "desc": "A quarrel for the medieval crossbow: an ash shaft swelling towards a socketed steel head with four edges, and a flattened butt that sits between the fingers of the nut. The all-round bolt, for wolves and deer.", "parts": [["m/CrossbowBoltCrafted__0.xm.gz", "t/bolt_crafted_albedo.jpg"]]}, "CrossbowBoltHeavy": {"name": "Heavy Hunting Bolt", "desc": "A quarrel with a long steel blade riveted to its socket, like the old crossbowmen's bolts for deer: the heaviest of the handmade bolts and the hardest-hitting. For bears, cougars and moose; it spoils small game.", "parts": [["m/CrossbowBoltHeavy__0.xm.gz", "t/bolt_crafted_albedo.jpg"]]}, "CrossbowBoltBarbed": {"name": "Barbed Bolt", "desc": "A quarrel with a flat, barbed head that stays in the wound. It hits less hard than the others, but the animal bleeds heavily as it runs: for tracking deer and moose.", "parts": [["m/CrossbowBoltBarbed__0.xm.gz", "t/bolt_crafted_albedo.jpg"]]}, "CrossbowBoltCraftedBroken": {"name": "Broken Handmade Bolt", "desc": "A handmade bolt whose head broke off in the target. The shaft is still good: bind on a new head of any kind with cured gut, or harvest it for its shaft.", "parts": [["m/CrossbowBoltCraftedBroken__0.xm.gz", "t/bolt_crafted_albedo.jpg"]]}, "CrossbowBoltCraftedShattered": {"name": "Splintered Handmade Bolt", "desc": "A handmade bolt broken beyond repair: the shaft split along its length, the head gone. The wood still makes a stick.", "parts": [["m/CrossbowBoltCraftedShattered__0.xm.gz", "t/bolt_crafted_albedo.jpg"]]}, "CrossbowQuiver": {"name": "Leather Bolt Quiver", "desc": "A bolt quiver of thick brown leather built up in layers, lined with sheepskin, its rim and bottom whipped with a thong and its wrap closed by a brass buckle. An embroidered Canadian flag is sewn on the front, the maker's Cpoint logo stitched on its red bar, and the maker's patch, Canada Point, on the back. It holds twelve handmade bolts or thirty-six Quill bolts, three Quill bolts in a handmade bolt's room, points up; bolts in it weigh 95% less. Open it from the inventory or where it lies. A crossbow reloads from it once the loose bolts in your pack are gone.", "parts": [["m/CrossbowQuiver__0.xm.gz", "t/quiver_albedo.jpg"], ["m/CrossbowQuiver__1.xm.gz", "t/bolt_crafted_albedo.jpg"]]}, "CrossbowBook": {"name": "The Crossbow", "desc": "Sir Ralph Payne-Gallwey's treatise on the crossbow (London, 1903). Study it to learn how to make and mend the three kinds of handmade bolt, and keep the crossbow itself in good order. A blacksmith who once lived on the island built a crossbow from it and left his own drawings of it, six sheets, one for each part. Tucked in the back cover, his note in pencil: \u201cThe first sheet is at the camp office by the lake. Upstairs.\u201d", "parts": [["m/CrossbowBook__0.xm.gz", "t/book_albedo.jpg"]]}, "TwinStrike": {"name": "TwinStrike Crossbow", "desc": "The Excalibur TwinStrike TAC2, a modern two-shot recurve crossbow: a follow-up shot without reloading. DualFire: two frictionless, match-grade 4 lb triggers, the front one for the upper rail, the rear one for the lower. CeaseFire: it won't fire without a bolt. The Charger EXT crank cocks it, or lets it down safely without a shot. 340 fps; 358 lb draw; 21.1 in wide cocked, 25.25 in uncocked; 7.75 lb bare, 9.8 lb with its accessories. Repaired only with the Crossbow Maintenance Kit.", "parts": [["m/TwinStrike__0.xm.gz", "t/ts_crank.jpg"], ["m/TwinStrike__1.xm.gz", "t/ts_frame.jpg"], ["m/TwinStrike__2.xm.gz", "t/ts_limbs.jpg"], ["m/TwinStrike__3.xm.gz", "t/ts_scope.jpg"], ["m/TwinStrike__4.xm.gz", "t/ts_stock.jpg"]]}, "TwinStrikeScope": {"name": "Tact-100 Scope", "desc": "Excalibur's Tact-100: a 1.5-5x32 illuminated crossbow scope on a 30 mm tube, flip-up caps on both lenses. Its multi-range reticle is zeroed at 20 yards, the centre ring, with a ring for every ten yards under it to 100, each numbered; they are true with the power ring at 3x, its speed dial set for the TwinStrike's 340 fps. The illumination lights the rings red or green. Fit it to the TwinStrike in the inventory or with the crossbow in your hands (the scope key); then the magnification key turns its power ring and the illumination key lights its reticle.", "parts": [["m/TwinStrikeScope__0.xm.gz", "t/ts_scope.jpg"]]}, "ChargerEXT": {"name": "Charger EXT", "desc": "Excalibur's Charger EXT: a quiet, removable crank that draws the TwinStrike's two strings back to full cock, and lets them down again without loosing a bolt. Fitted to the crossbow's butt, it is what makes reloading possible: about 12 lb of effort on the handle against 358 lb of draw.", "parts": [["m/ChargerEXT__0.xm.gz", "t/ts_crank.jpg"]]}, "ExcaliburQuiver": {"name": "Excalibur Quiver", "desc": "Excalibur's four-bolt quiver for the TwinStrike: two woven carbon tubes, a rubber gripper for the nocks and a camo hood over the points. It holds four Quill bolts and nothing else, and they weigh next to nothing in it. Fitted to the TwinStrike through the inventory, it rides under the right limbs and the crossbow reloads from it first.", "parts": [["m/ExcaliburQuiver__0.xm.gz", "t/ts_quiver.jpg"], ["m/ExcaliburQuiver__1.xm.gz", "t/ts_quill.jpg"]]}, "CrossbowMaintenanceKit": {"name": "Crossbow Maintenance Kit", "desc": "Excalibur's crossbow maintenance pack: X-Slick, the silicone lube for the rail; Ex-Wax for the strings' servings; Ex-Oil against rust on the trigger and the hardware. The only way to repair the TwinStrike, and each repair uses some of it.", "parts": [["m/CrossbowMaintenanceKit__0.xm.gz", "t/ts_kit.jpg"]]}, "CrossbowBoltCarbon": {"name": "Standard Broadhead Quill Bolt", "desc": "An Excalibur Quill 16.5-inch carbon bolt with a Boltcutter 100-grain broadhead: three fixed blades, 1-1/16 in across. Balanced: wolves, deer, general hunting. Often survives the shot; a broken one can't be mended. Harvest it to unscrew its point.", "parts": [["m/CrossbowBoltCarbon__0.xm.gz", "t/ts_quill.jpg"]]}, "QuillBoltHeavy": {"name": "Heavy Broadhead Quill Bolt", "desc": "An Excalibur Quill 16.5-inch carbon bolt with a Boltcutter 150-grain broadhead, all stainless: the hardest blow, for bears and cougars, and moose. Often survives the shot; a broken one can't be mended. Harvest it to unscrew its point.", "parts": [["m/QuillBoltHeavy__0.xm.gz", "t/ts_quill.jpg"]]}, "QuillBoltMechanical": {"name": "Mechanical Broadhead Quill Bolt", "desc": "An Excalibur Quill 16.5-inch carbon bolt with a Trailblazer mechanical broadhead: its two blades open in the animal. A lighter blow, but the wound bleeds heavily: deer and moose bleed out far sooner. Harvest it to unscrew its point.", "parts": [["m/QuillBoltMechanical__0.xm.gz", "t/ts_quill.jpg"]]}, "QuillBoltSmallGame": {"name": "Small-Game Quill Bolt", "desc": "An Excalibur Quill 16.5-inch carbon bolt with a judo point: a steel blunt whose spring arms catch in the grass. For rabbits and other small game, without spoiling the meat; next to useless on anything bigger. Harvest it to unscrew its point.", "parts": [["m/QuillBoltSmallGame__0.xm.gz", "t/ts_quill.jpg"]]}, "QuillShaft": {"name": "Quill Shaft", "desc": "An Excalibur Quill 16.5-inch carbon shaft, 350 grain, its Rhino nock and three vanes on, its insert waiting for a point. Screw a point in to make a bolt (crafting, anywhere, a minute).", "parts": [["m/QuillShaft__0.xm.gz", "t/ts_quill.jpg"]]}, "CrossbowBoltBroken": {"name": "Broken Quill Bolt", "desc": "The tail of a Quill bolt that snapped on impact, its point lost in the target. Carbon can't be mended: strip it for its metal fittings.", "parts": [["m/CrossbowBoltBroken__0.xm.gz", "t/ts_quill.jpg"]]}, "QuillPointStandard": {"name": "Boltcutter 100 Broadhead", "desc": "Excalibur's Boltcutter, 100 grain: three fixed, vented blades 1-1/16 in across on a blue aluminium ferrule. Balanced: wolves, deer, general hunting. Screw it into a Quill shaft.", "parts": [["m/QuillPointStandard__0.xm.gz", "t/ts_quill.jpg"]]}, "QuillPointHeavy": {"name": "Boltcutter 150 Broadhead", "desc": "Excalibur's Boltcutter, 150 grain, all stainless: the same blades on a longer, heavier ferrule. The hardest blow: bears, cougars, moose. Screw it into a Quill shaft.", "parts": [["m/QuillPointHeavy__0.xm.gz", "t/ts_quill.jpg"]]}, "QuillPointMechanical": {"name": "Trailblazer Mechanical Broadhead", "desc": "Excalibur's Trailblazer, 100 grain: two blades folded along its ferrule open as it strikes, for a wide wound that bleeds heavily. Screw it into a Quill shaft.", "parts": [["m/QuillPointMechanical__0.xm.gz", "t/ts_quill.jpg"]]}, "QuillPointSmallGame": {"name": "Judo Small-Game Point", "desc": "A 100-grain screw-in judo point: a steel blunt with four spring-wire arms. Stuns and kills small game without spoiling the meat. Screw it into a Quill shaft.", "parts": [["m/QuillPointSmallGame__0.xm.gz", "t/ts_quill.jpg"]]}, "CrossbowBoltBox": {"name": "Box of Quill Shafts", "desc": "A box of 6 Excalibur Quill 16.5-inch carbon shafts for the TwinStrike, without points (they are sold apart). Open it (15 seconds) to take the shafts out; the card is good for a paper stack.", "parts": [["m/CrossbowBoltBox__0.xm.gz", "t/ts_qbox.jpg"]]}, "QuillPointBoxStandard": {"name": "Case of Boltcutter 100 Broadheads", "desc": "Excalibur's case of six Boltcutter 100-grain broadheads in a foam bed. Open it (15 seconds) to take them out.", "parts": [["m/QuillPointBoxStandard__0.xm.gz", "t/ts_qbox.jpg"]]}, "QuillPointBoxHeavy": {"name": "Case of Boltcutter 150 Broadheads", "desc": "Excalibur's case of six Boltcutter 150-grain broadheads in a foam bed. Open it (15 seconds) to take them out.", "parts": [["m/QuillPointBoxHeavy__0.xm.gz", "t/ts_qbox.jpg"]]}, "QuillPointBoxMechanical": {"name": "Case of Trailblazer Broadheads", "desc": "Excalibur's case of six Trailblazer mechanical broadheads in a foam bed. Open it (15 seconds) to take them out.", "parts": [["m/QuillPointBoxMechanical__0.xm.gz", "t/ts_qbox.jpg"]]}, "QuillPointBoxSmallGame": {"name": "Case of Judo Points", "desc": "A case of six screw-in judo points for small game, in a foam bed. Open it (15 seconds) to take them out.", "parts": [["m/QuillPointBoxSmallGame__0.xm.gz", "t/ts_qbox.jpg"]]}}</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+(function () {
+  const ITEMS = JSON.parse(document.getElementById('gear-data').textContent);
+  const dlg = document.getElementById('viewer'), canvas = document.getElementById('stage'), status = document.getElementById('status');
+  let gl = null, current = null, raf = 0, token = 0;
+
+  function setup() {
+    if (gl) return gl;
+    if (!window.THREE || !THREE.OrbitControls) throw new Error('The 3D library did not load.');
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.outputEncoding = THREE.sRGBEncoding;
+    renderer.setClearColor(0x000000, 0);
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(32, 1, 0.002, 60);
+    const controls = new THREE.OrbitControls(camera, canvas);
+    controls.enableDamping = true; controls.dampingFactor = 0.08; controls.screenSpacePanning = true;
+    // the cel look's light: a warm key high to the right, a cool sky and a dark ground
+    const key = new THREE.DirectionalLight(0xfff0d8, 1.05); key.position.set(1.4, 2.2, 1.6); scene.add(key);
+    const rim = new THREE.DirectionalLight(0xc9d7ea, 0.35); rim.position.set(-1.6, 0.8, -1.4); scene.add(rim);
+    scene.add(new THREE.HemisphereLight(0xb4c3d6, 0x3b3f45, 0.85));
+    const steps = new THREE.DataTexture(new Uint8Array([96, 150, 205, 255]), 4, 1, THREE.LuminanceFormat);
+    steps.minFilter = steps.magFilter = THREE.NearestFilter; steps.needsUpdate = true;
+    gl = { renderer, scene, camera, controls, steps, loader: new THREE.TextureLoader(), maps: new Map() };
+    return gl;
+  }
+
+  async function mesh(url) {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('A model file is missing (' + url + ').');
+    if (!('DecompressionStream' in window)) throw new Error('This browser cannot unpack the models. Try a current Chrome, Edge, Firefox or Safari.');
+    // a model is gzipped (.xm.gz), or gzipped and then base64 text (.txt) where the host serves no .gz
+    const packed = url.endsWith('.txt') ? Uint8Array.from(atob(await res.text()), ch => ch.charCodeAt(0)) : await res.arrayBuffer();
+    const buf = await new Response(new Blob([packed]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();
+    const dv = new DataView(buf), nv = dv.getInt32(8, true), ni = dv.getInt32(12, true);
+    let o = 16;
+    const pos = new Float32Array(buf.slice(o, o + nv * 12)); o += nv * 12;
+    const nor = new Float32Array(buf.slice(o, o + nv * 12)); o += nv * 12;
+    const uv = new Float32Array(buf.slice(o, o + nv * 8)); o += nv * 8;
+    const idx = new Uint32Array(buf.slice(o, o + ni * 4));
+    // the game's axes (left-handed) to the viewer's: depth flipped, and the triangles wound the other way
+    for (let i = 2; i < pos.length; i += 3) { pos[i] = -pos[i]; nor[i] = -nor[i]; }
+    for (let i = 0; i < idx.length; i += 3) { const t = idx[i + 1]; idx[i + 1] = idx[i + 2]; idx[i + 2] = t; }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    g.setAttribute('normal', new THREE.BufferAttribute(nor, 3));
+    g.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+    g.setIndex(new THREE.BufferAttribute(idx, 1));
+    return g;
+  }
+
+  function map(url) {
+    if (!gl.maps.has(url)) gl.maps.set(url, gl.loader.loadAsync(url).then(t => {
+      t.encoding = THREE.sRGBEncoding; t.anisotropy = gl.renderer.capabilities.getMaxAnisotropy(); return t; }));
+    return gl.maps.get(url);
+  }
+
+  function clear() {
+    if (!current) return;
+    gl.scene.remove(current);
+    current.traverse(o => { if (o.isMesh) { o.geometry.dispose(); o.material.dispose(); } });
+    current = null;
+    // the maps of the item before go too: some are 4096 square
+    for (const p of gl.maps.values()) p.then(t => t.dispose()).catch(() => {});
+    gl.maps.clear();
+  }
+
+  function size() {
+    const r = canvas.parentElement.getBoundingClientRect();
+    gl.renderer.setSize(Math.max(1, r.width), Math.max(1, r.height), false);
+    gl.camera.aspect = Math.max(1, r.width) / Math.max(1, r.height); gl.camera.updateProjectionMatrix();
+  }
+
+  function frame(group) {
+    const box = new THREE.Box3().setFromObject(group), c = box.getCenter(new THREE.Vector3());
+    const r = box.getBoundingSphere(new THREE.Sphere()).radius;
+    const fov = THREE.MathUtils.degToRad(gl.camera.fov), fit = Math.min(fov, 2 * Math.atan(Math.tan(fov / 2) * gl.camera.aspect));
+    const d = r / Math.sin(fit / 2) * 1.08;
+    const dir = new THREE.Vector3(0.62, 0.42, 0.66).normalize();
+    gl.camera.position.copy(c).addScaledVector(dir, d);
+    gl.camera.near = d / 200; gl.camera.far = d * 20; gl.camera.updateProjectionMatrix();
+    gl.controls.target.copy(c); gl.controls.minDistance = r * 0.25; gl.controls.maxDistance = d * 4; gl.controls.update();
+  }
+
+  function loop() { raf = requestAnimationFrame(loop); gl.controls.update(); gl.renderer.render(gl.scene, gl.camera); }
+
+  async function open(k) {
+    const it = ITEMS[k], my = ++token;
+    document.getElementById('v-name').textContent = it.name;
+    document.getElementById('v-desc').textContent = it.desc;
+    const icon = document.getElementById('v-icon'); icon.src = 'i/' + k + '.png'; icon.alt = it.name + ': inventory icon';
+    if (!dlg.open) dlg.showModal();
+    status.textContent = 'Loading the model\u2026'; status.hidden = false;
+    try {
+      setup(); clear(); size();
+      cancelAnimationFrame(raf); loop();
+      const group = new THREE.Group();
+      const parts = await Promise.all(it.parts.map(async ([m, t]) => {
+        const [g, tex] = await Promise.all([mesh(m), map(t)]);
+        return new THREE.Mesh(g, new THREE.MeshToonMaterial({ map: tex, gradientMap: gl.steps, side: THREE.DoubleSide }));
+      }));
+      if (my !== token) { parts.forEach(p => { p.geometry.dispose(); p.material.dispose(); }); return; }
+      parts.forEach(p => group.add(p));
+      current = group; gl.scene.add(group); frame(group);
+      status.hidden = true;
+    } catch (err) {
+      status.textContent = (err && err.message) ? err.message : 'The model could not be shown.'; status.hidden = false;
+    }
+  }
+
+  function close() { cancelAnimationFrame(raf); raf = 0; if (dlg.open) dlg.close(); }
+  document.querySelectorAll('.item').forEach(b => b.addEventListener('click', () => open(b.dataset.k)));
+  document.getElementById('v-close').addEventListener('click', close);
+  dlg.addEventListener('click', e => { if (e.target === dlg) close(); });
+  dlg.addEventListener('close', () => { cancelAnimationFrame(raf); raf = 0; });
+  window.addEventListener('resize', () => { if (gl && dlg.open) size(); });
+})();
+</script>
+</body>
+</html>
