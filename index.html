@@ -639,8 +639,8 @@ dialog::backdrop { background: rgb(6 8 10 / .8); }
       const group = new THREE.Group();
       const parts = await Promise.all(it.parts.map(async ([m, t]) => {
         if (t === 'film') {                // a box window's clear plastic: see-through, a little gloss, drawn last
-          const p = new THREE.Mesh(await mesh(m), new THREE.MeshPhongMaterial({ color: 0xe2eaf2, transparent: true, opacity: 0.035,
-            shininess: 90, specular: 0x808080, depthWrite: false, side: THREE.DoubleSide }));
+          const p = new THREE.Mesh(await mesh(m), new THREE.MeshPhongMaterial({ color: 0xe2eaf2, transparent: true, opacity: 0.13,
+            shininess: 110, specular: 0xffffff, depthWrite: false, side: THREE.DoubleSide }));
           p.renderOrder = 1; return p;
         }
         const [g, tex] = await Promise.all([mesh(m), map(t)]);
