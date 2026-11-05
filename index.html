@@ -559,7 +559,7 @@ dialog::backdrop { background: rgb(6 8 10 / .8); }
     const camera = new THREE.PerspectiveCamera(32, 1, 0.002, 60);
     const controls = new THREE.OrbitControls(camera, canvas);
     controls.enableDamping = true; controls.dampingFactor = 0.08; controls.screenSpacePanning = true;
-    // the cel look's light: a warm key high to the right, a cool sky and a dark ground
+    // the light: a warm key high to the right, a cool sky and a dark ground (soft shading: the painted maps carry the look)
     const key = new THREE.DirectionalLight(0xfff0d8, 1.05); key.position.set(1.4, 2.2, 1.6); scene.add(key);
     const rim = new THREE.DirectionalLight(0xc9d7ea, 0.35); rim.position.set(-1.6, 0.8, -1.4); scene.add(rim);
     scene.add(new THREE.HemisphereLight(0xb4c3d6, 0x3b3f45, 0.85));
@@ -644,7 +644,7 @@ dialog::backdrop { background: rgb(6 8 10 / .8); }
           p.renderOrder = 1; return p;
         }
         const [g, tex] = await Promise.all([mesh(m), map(t)]);
-        return new THREE.Mesh(g, new THREE.MeshToonMaterial({ map: tex, gradientMap: gl.steps, side: THREE.DoubleSide }));
+        return new THREE.Mesh(g, new THREE.MeshLambertMaterial({ map: tex, side: THREE.DoubleSide }));
       }));
       if (my !== token) { parts.forEach(p => { p.geometry.dispose(); p.material.dispose(); }); return; }
       parts.forEach(p => group.add(p));
