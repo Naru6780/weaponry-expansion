@@ -1103,7 +1103,7 @@ dialog::backdrop { background: rgb(6 8 10 / .8); }
     let u = UP.clone().addScaledVector(d, -UP.dot(d));
     if (u.lengthSq() < 1e-8) u = FWD.clone().addScaledVector(d, -FWD.dot(d));
     u.normalize();
-    return { a, b, d, u, w: d.clone().cross(u) };
+    return { a, b, ab: b.clone().sub(a), d, u, w: d.clone().cross(u) };
   }
   const smooth = t => { t = Math.min(1, Math.max(0, t)); return t * t * (3 - 2 * t); };
 
@@ -1296,7 +1296,7 @@ dialog::backdrop { background: rgb(6 8 10 / .8); }
           const pos = m.geo.attributes.position.array, nor = m.geo.attributes.normal.array, N = pos.length / 3;
           for (let i = 0; i < N; i++) {
             const f = frames[m.seg[i]];
-            v.copy(f.a).addScaledVector(f.b.clone().sub(f.a), m.tt[i]).addScaledVector(f.u, m.off[i * 2]).addScaledVector(f.w, m.off[i * 2 + 1]);
+            v.copy(f.a).addScaledVector(f.ab, m.tt[i]).addScaledVector(f.u, m.off[i * 2]).addScaledVector(f.w, m.off[i * 2 + 1]);
             n.copy(f.d).multiplyScalar(m.nrm[i * 3]).addScaledVector(f.u, m.nrm[i * 3 + 1]).addScaledVector(f.w, m.nrm[i * 3 + 2]);
             const wr = m.wr[i];
             if (wr > 0) {
